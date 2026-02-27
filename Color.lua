@@ -59,10 +59,18 @@ function Color:new(r,g,b,a)
             return "("..(round(s[1]*100)/100)..","..(round(s[2]*100)/100)..","..(round(s[3]*100)/100)..","..(round(s[4]*100)/100)..")"
         end,
         __sub=function(a,b)
-            if type(a) ~= "table" || type(b) ~= "table" then
+            if type(a) ~= "table" or type(b) ~= "table" then
                 error("both values must be colors")
             end
             return a:distance(b)
+        end,
+        __mul=function(a,b)
+            if type(a) == "number" and type(b) == "table" then
+                a,b=b,a
+            end
+            if type(a) == "table" and type(b) == "number" then
+                return Color:new(a[1]*b,a[2]*b,a[3]*b,a[4])
+            end
         end
     })
     return o
@@ -80,7 +88,7 @@ function Color:mix(color,k)
     return Color:new(interp(self[1],color[1],k),interp(self[2],color[2],k),interp(self[3],color[3],k),interp(self[4],color[4],k))
 end
 
-function Color:findClosest(self,palette,distanceFunction)
+function Color:findClosest(palette,distanceFunction)
     distanceFunction = distanceFunction and distanceFunction or self.distance
     local mindist = distanceFunction(self,palette[1])
     local mini = 1
