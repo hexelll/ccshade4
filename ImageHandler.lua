@@ -46,6 +46,7 @@ function ImageHandler:duplicate()
 
     local img = ImageHandler:new(self.sx,self.sy,newData)
     img.uniqueColors = self.uniqueColors
+    img.doUnique = self.doUnique
     return img
 end
 
