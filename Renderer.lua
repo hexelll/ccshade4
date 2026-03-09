@@ -8,7 +8,8 @@ function Renderer:new(params)
     o.term = params.term and params.term or term
     local width,height = o.term.getSize()
     o.sx,o.sy = params.sx and params.sx or width, params.sy and params.Sy or height
-    local defaultcombinators = {SimpleCombinator:new()}
+    o.defaultcombinator = params.defaultcombinator and params.defaultcombinator or SimpleCombinator:new()
+    local defaultcombinators = {o.defaultcombinator}
     o.combinators = o.combinators and o.combinators or defaultcombinators
     o.mask = params.mask and params.mask
     o.px,o.py = params.px and params.px or 0, params.py and params.py or 0
@@ -58,8 +59,8 @@ function Renderer:render(image,palette)
         lines[i] = {"","",""}
         for j=1,self.sx do
             local v,u = (i-1)/(self.sy-1),(j-1)/(self.sx-1)
-            local combinator = self:getCombinator(u,v)
-            local combination = combinator:findCombination(u,v,image,palette)
+            local combinator = self:getCombinator(u,v,i,j)
+            local combination = combinator:findCombination(u,v,i,j,image,palette)
             lines[i][1] = lines[i][1]..combination[1]
             lines[i][2] = lines[i][2]..combination[2]
             lines[i][3] = lines[i][3]..combination[3]
