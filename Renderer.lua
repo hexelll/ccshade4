@@ -54,6 +54,8 @@ function Renderer:render(image,palette)
     for i=1,#palette do
         self.term.setPaletteColor(2^(i-1),palette[i][1],palette[i][2],palette[i][3])
     end
+
+    local timeYield = os.clock()
     local lines = {}
     for i=1,self.sy do
         lines[i] = {"","",""}
@@ -64,6 +66,11 @@ function Renderer:render(image,palette)
             lines[i][1] = lines[i][1]..combination[1]
             lines[i][2] = lines[i][2]..combination[2]
             lines[i][3] = lines[i][3]..combination[3]
+
+            if ( os.clock() > timeYield+5 ) then
+                sleep()
+                timeYield = os.clock()
+            end
         end
     end
     return {lines=lines,display=function()
