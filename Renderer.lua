@@ -49,7 +49,7 @@ end
 function Renderer:render(image,palette)
     palette = palette and palette or image:findPalette()
     for _,combinator in pairs(self.combinators) do
-        --combinator:init(image,palette)
+        combinator:init(image,palette)
     end
     for i=1,#palette do
         self.term.setPaletteColor(2^(i-1),palette[i][1],palette[i][2],palette[i][3])
