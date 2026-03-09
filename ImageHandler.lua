@@ -16,7 +16,8 @@ local function uvToIndex(sx,sy,u,v)
     return y*sx + x + 1
 end
 
-function ImageHandler:new(sx,sy,data)
+function ImageHandler:new(sx,sy,data,dontDoUnique)
+
     local sx,sy = math.max(sx,0),math.max(sy,0)
 
     if (not data) then
@@ -26,7 +27,7 @@ function ImageHandler:new(sx,sy,data)
         end
     end
 
-    local o = {sx=sx,sy=sy,data=data,uniqueColors={}}
+    local o = {sx=sx,sy=sy,data=data,uniqueColors={},doUnique=not dontDoUnique}
 
     setmetatable(o,{
         __index=function(_,k)
@@ -70,8 +71,9 @@ end
 function ImageHandler:setPx(u,v,color)
     local index = uvToIndex(self.sx,self.sy,u,v)
     self.data[index] = color
-
-    self.uniqueColors[color:toHex()] = color
+    if self.doUnique then
+        self.uniqueColors[color:toHex()] = color
+    end
     return self
 end
 
@@ -134,9 +136,11 @@ function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
 end
 
 function ImageHandler:initUnique()
-    for i=1,self.sx*self.sy do
-        local color = self.data[i]
-        self.uniqueColors[color:toHex()] = color
+    if self.doUnique then
+        for i=1,self.sx*self.sy do
+            local color = self.data[i]
+            self.uniqueColors[color:toHex()] = color
+        end
     end
     return self
 end
