@@ -48,8 +48,10 @@ end
 
 -- rgb 0-1
 function Color:new(r,g,b,a)
+    r = r and r or 0
+    g = g and g or 0
+    b = b and b or 0
     a = a and a or 1
-    local r,g,b,a = clamp(r),clamp(g),clamp(b),clamp(a)
     local o = {r,g,b,a}
     setmetatable(o,{
         __index=function(_,k)
