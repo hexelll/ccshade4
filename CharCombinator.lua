@@ -316,11 +316,23 @@ function CharCombinator:new(nbSearched,usedChars)
         table.insert( o.usedCharsCoef , o.charCoefs[charNum+1] )
     end
 
+    o.cacheCombination = {}
+    for r=1,256 do
+        o.cacheCombination[r]={}
+        for g=1,256 do
+            o.cacheCombination[r][g]={}
+            for b=1,256 do
+                o.cacheCombination[r][g][b] = nil
+            end
+        end
+    end
+
     setmetatable(o,{
         __index=function(_,k)
             return self[k]
         end
     })
+
     return o
 end
 
@@ -364,84 +376,93 @@ end
 
 
 function CharCombinator:findCombination(u,v,x,y,image,palette)
-    local colorNew = image:getPx(u,v)
-    local searchedColor = {colorNew[1],colorNew[2],colorNew[3]}
+    local searchedColor = image:getPx(u,v)
 
-    local combinationTable = self.combinationTable
-    local usedChars = self.usedChars
-    local nbSearched = self.nbSearched
+    local r,g,b = 1+math.floor(searchedColor[1]*255+0.5),1+math.floor(searchedColor[2]*255+0.5),1+math.floor(searchedColor[3]*255+0.5)
 
-    local best = {}   -- sorted by dif ascending
+    local combination = nil
+    if ( self.cacheCombination[r][g][b] ) then
+        combination = self.cacheCombination[r][g][b]
+    else    
+        local combinationTable = self.combinationTable
+        local usedChars = self.usedChars
+        local nbSearched = self.nbSearched
 
-    for textColNum = 1, #combinationTable do
-        local row = combinationTable[textColNum]
+        local best = {}   -- sorted by dif ascending
 
-        for backColNum = 1, #row do
-            local cell = row[backColNum]
+        for textColNum = 1, #combinationTable do
+            local row = combinationTable[textColNum]
 
-            if cell then
-                for i = 1, #usedChars do
-                    local charNum = usedChars[i]
-                    local comb = cell[i]
+            for backColNum = 1, #row do
+                local cell = row[backColNum]
 
-                    if comb then
-                        local color = comb[1]
-                        local closeness = comb[2]
+                if cell then
+                    for i = 1, #usedChars do
+                        local charNum = usedChars[i]
+                        local comb = cell[i]
 
-                        local dif = differenceColors(color,searchedColor)
+                        if comb then
+                            local color = comb[1]
+                            local closeness = comb[2]
 
-                        -- inline sorted insertion
-                        local inserted = false
-                        local len = #best
+                            local dif = differenceColors(color,searchedColor)
 
-                        for j = 1, len do
-                            if dif < best[j][4] then
-                                table.insert(best,j, {
+                            -- inline sorted insertion
+                            local inserted = false
+                            local len = #best
+
+                            for j = 1, len do
+                                if dif < best[j][4] then
+                                    table.insert(best,j, {
+                                        textColNum,
+                                        backColNum,
+                                        charNum,
+                                        dif,
+                                        closeness
+                                    })
+                                    inserted = true
+                                    break
+                                end
+                            end
+
+                            if not inserted then
+                                best[len + 1] = {
                                     textColNum,
                                     backColNum,
                                     charNum,
                                     dif,
                                     closeness
-                                })
-                                inserted = true
-                                break
+                                }
                             end
-                        end
 
-                        if not inserted then
-                            best[len + 1] = {
-                                textColNum,
-                                backColNum,
-                                charNum,
-                                dif,
-                                closeness
-                            }
-                        end
-
-                        if #best > nbSearched then
-                            best[nbSearched + 1] = nil
+                            if #best > nbSearched then
+                                best[nbSearched + 1] = nil
+                            end
                         end
                     end
                 end
             end
         end
-    end
 
-    -- select smallest closeness among best difs
-    local bestIdx = 1
-    local bestClose = best[1][5]
+        -- select smallest closeness among best difs
+        local bestIdx = 1
+        local bestClose = best[1][5]
 
-    for i = 2, #best do
-        local cclose = best[i][5]
-        if cclose < bestClose then
-            bestClose = cclose
-            bestIdx = i
+        for i = 2, #best do
+            local cclose = best[i][5]
+            if cclose < bestClose then
+                bestClose = cclose
+                bestIdx = i
+            end
         end
+
+        local bestofbests = best[bestIdx]
+        combination = {string.char(bestofbests[3]),hexTable[bestofbests[1]],hexTable[bestofbests[2]]}
+  
+        self.cacheCombination[r][g][b] = combination
     end
 
-    local r = best[bestIdx]
-
-    return {string.char(r[3]),hexTable[r[1]],hexTable[r[2]]}
+    return combination
 
 end
 
