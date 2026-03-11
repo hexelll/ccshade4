@@ -51,9 +51,6 @@ function Renderer:render(image,palette)
     for _,combinator in pairs(self.combinators) do
         combinator:init(image,palette)
     end
-    for i=1,#palette do
-        self.term.setPaletteColor(2^(i-1),palette[i][1],palette[i][2],palette[i][3])
-    end
 
     local timeYield = os.clock()
     local lines = {}
@@ -62,7 +59,7 @@ function Renderer:render(image,palette)
         for j=1,self.sx do
             local v,u = (i-1)/((self.sy-1)),(j-1)/((self.sx-1))
             local combinator = self:getCombinator(u,v,j,i)
-            local combination = combinator:findCombination(u,v,j,i,image,palette)
+            local combination = combinator:findCombination(u,v,j,i,image,palette,self)
             lines[i][1] = lines[i][1]..combination[1]
             lines[i][2] = lines[i][2]..combination[2]
             lines[i][3] = lines[i][3]..combination[3]
@@ -80,6 +77,9 @@ function Renderer:render(image,palette)
 end
 
 function Renderer:display(lines)
+    for i=1,#palette do
+        self.term.setPaletteColor(2^(i-1),palette[i][1],palette[i][2],palette[i][3])
+    end
     for i=1,#lines do
         self.term.setCursorPos(1+self.px,i+self.py)
         self.term.blit(table.unpack(lines[i]))
