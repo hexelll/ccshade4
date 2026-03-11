@@ -51,7 +51,7 @@ function Renderer:render(image,palette)
     for _,combinator in pairs(self.combinators) do
         combinator:init(image,palette)
     end
-
+    self.palette = palette
     local timeYield = os.clock()
     local lines = {}
     for i=1,self.sy do
@@ -77,6 +77,7 @@ function Renderer:render(image,palette)
 end
 
 function Renderer:display(lines)
+    local palette = self.palette
     for i=1,#palette do
         self.term.setPaletteColor(2^(i-1),palette[i][1],palette[i][2],palette[i][3])
     end
