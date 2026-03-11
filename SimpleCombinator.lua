@@ -32,6 +32,10 @@ function SimpleCombinator:new()
     return o
 end
 
+function SimpleCombinator:init()
+
+end
+
 function SimpleCombinator:findCombination(u,v,x,y,image,palette)
     local indexColor = image:getPx(u,v):findClosest(palette)
     return {string.char(0),"0",hexTable[indexColor]}
