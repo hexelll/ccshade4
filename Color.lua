@@ -73,6 +73,9 @@ function Color:new(r,g,b,a)
             if type(a) == "table" and type(b) == "number" then
                 return Color:new(a[1]*b,a[2]*b,a[3]*b,a[4])
             end
+        end,
+        __eq=function(a,b)
+            return a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
         end
     })
     return o
