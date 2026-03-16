@@ -1,6 +1,6 @@
 local Color = require("Color")
 
-local CharCombinator = {}
+local RoughCharCombinator = {}
 
 local hexTable = {
     "0",
@@ -280,10 +280,9 @@ local charCoefs = {
     17/54 ,
 }
 
-function CharCombinator:new(nbSearched,cacheSize,usedChars)
+function RoughCharCombinator:new(cacheSize,usedChars)
     local o = {}
 
-    o.nbSearched = nbSearched and nbSearched or 1
     o.cacheSize = cacheSize and cacheSize or 100
     
     o.usedChars = usedChars and usedChars or {}
@@ -321,9 +320,7 @@ function CharCombinator:new(nbSearched,cacheSize,usedChars)
     return o
 end
 
-
-function CharCombinator:init(image,palette)
-
+function RoughCharCombinator:init(image,palette)
     local combinationTable = {}
     for textColNum=1,#palette do
 
@@ -348,7 +345,7 @@ function CharCombinator:init(image,palette)
                         else
                             local color = colorT:mix(colorB,coef)
 
-                            combinationTable[textColNum][backColNum][i] = {color,closeness}
+                            combinationTable[textColNum][backColNum][i] = color
                         end
                 end 
             else
@@ -370,21 +367,23 @@ function CharCombinator:init(image,palette)
     end
 end
 
-
-function CharCombinator:findCombination(u,v,x,y,image,palette)
+function RoughCharCombinator:findCombination(u,v,x,y,image,palette)
     local searchedColor = image:getPx(u,v)
 
     local r,g,b = 1+math.floor(searchedColor[1]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[2]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[3]*(self.cacheSize-1)+0.5)
 
-    local combination = nil
     if ( self.cacheCombination[r][g][b] ) then
-        combination = self.cacheCombination[r][g][b]
-    else    
+        return self.cacheCombination[r][g][b]
+    else  
         local combinationTable = self.combinationTable
         local usedChars = self.usedChars
-        local nbSearched = self.nbSearched
 
-        local best = {}   -- sorted by dif ascending
+        local best = {
+            10000,
+            -1,
+            0,
+            0,
+        }
 
         for textColNum = 1, #combinationTable do
             local row = combinationTable[textColNum]
@@ -394,45 +393,19 @@ function CharCombinator:findCombination(u,v,x,y,image,palette)
 
                 if cell then
                     for i = 1, #usedChars do
-                        local charNum = usedChars[i]
-                        local comb = cell[i]
+                        local color = cell[i]
 
-                        if comb then
-                            local color = comb[1]
-                            local closeness = comb[2]
+                        if color then
 
                             local dif = color:distance(searchedColor)
 
-                            -- inline sorted insertion
-                            local inserted = false
-                            local len = #best
-
-                            for j = 1, len do
-                                if dif < best[j][4] then
-                                    table.insert(best,j, {
-                                        textColNum,
-                                        backColNum,
-                                        charNum,
-                                        dif,
-                                        closeness
-                                    })
-                                    inserted = true
-                                    break
-                                end
-                            end
-
-                            if not inserted then
-                                best[len + 1] = {
+                            if (dif<best[1]) then
+                                best = {
+                                    dif,
+                                    usedChars[i],
                                     textColNum,
                                     backColNum,
-                                    charNum,
-                                    dif,
-                                    closeness
                                 }
-                            end
-
-                            if #best > nbSearched then
-                                best[nbSearched + 1] = nil
                             end
                         end
                     end
@@ -440,26 +413,12 @@ function CharCombinator:findCombination(u,v,x,y,image,palette)
             end
         end
 
-        -- select smallest closeness among best difs
-        local bestIdx = 1
-        local bestClose = best[1][5]
-
-        for i = 2, #best do
-            local cclose = best[i][5]
-            if cclose < bestClose then
-                bestClose = cclose
-                bestIdx = i
-            end
-        end
-
-        local bestofbests = best[bestIdx]
-        combination = {string.char(bestofbests[3]),hexTable[bestofbests[1]],hexTable[bestofbests[2]]}
+        local combination = {string.char(best[2]),hexTable[best[3]],hexTable[best[4]]}
   
         self.cacheCombination[r][g][b] = combination
+
+        return combination
     end
-
-    return combination
-
 end
 
-return CharCombinator
+return RoughCharCombinator
