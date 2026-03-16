@@ -280,6 +280,7 @@ local charCoefs = {
     17/54 ,
 }
 
+--[[
 local combineColors = function (colorT,colorB,coef) 
     local r = colorT[1]*coef + (1-coef)*colorB[1]
     local g = colorT[2]*coef + (1-coef)*colorB[2]
@@ -291,37 +292,35 @@ end
 local differenceColors = function (color1,color2)
     return ( (color1[1]-color2[1])^2+(color1[2]-color2[2])^2+(color1[3]-color2[3])^2 )
 end
+]]
 
-function CharCombinator:new(nbSearched,usedChars)
-    usedChars = usedChars and usedChars or {}
-    nbSearched = nbSearched and nbSearched or 1
-
+function CharCombinator:new(nbSearched,cacheSize,usedChars)
     local o = {}
-    o.usedChars = usedChars
-    o.nbSearched = nbSearched
-    o.combinationTable = {}
-    o.charCoefs = charCoefs
 
-    if ( #usedChars == 0) then
+    o.nbSearched = nbSearched and nbSearched or 1
+    o.cacheSize = cacheSize and cacheSize or 256
+    
+    o.usedChars = usedChars and usedChars or {}
+    if ( #o.usedChars == 0) then
         o.usedChars = {}
         for i=1,255 do
-            --if (o.charCoefs[i] ~= -1) then
-                o.usedChars[#o.usedChars+1] = i-1
-            --end
+            o.usedChars[#o.usedChars+1] = i-1
         end
     end
+    
+    o.combinationTable = {}   
 
     o.usedCharsCoef = {}
     for _,charNum in ipairs(o.usedChars) do
-        table.insert( o.usedCharsCoef , o.charCoefs[charNum+1] )
+        table.insert( o.usedCharsCoef , charCoefs[charNum+1] )
     end
 
     o.cacheCombination = {}
-    for r=1,256 do
+    for r=1,o.cacheSize do
         o.cacheCombination[r]={}
-        for g=1,256 do
+        for g=1,o.cacheSize do
             o.cacheCombination[r][g]={}
-            for b=1,256 do
+            for b=1,o.cacheSize do
                 o.cacheCombination[r][g][b] = nil
             end
         end
@@ -350,7 +349,7 @@ function CharCombinator:init(image,palette)
             local colorB = palette[backColNum]
             combinationTable[textColNum][backColNum] = {}
 
-            local closeness = differenceColors(colorT,colorB) 
+            local closeness = colorT:distanceOklab(colorB) 
 
             if (textColNum~=backColNum) then
 
@@ -361,7 +360,7 @@ function CharCombinator:init(image,palette)
                         if ( coef == 0.5 and backColNum < textColNum) then
                             combinationTable[textColNum][backColNum][i] = nil
                         else
-                            local color = combineColors(colorT,colorB,coef)
+                            local color = colorT:mix(colorB,coef)
 
                             combinationTable[textColNum][backColNum][i] = {color,closeness}
                         end
@@ -378,7 +377,7 @@ end
 function CharCombinator:findCombination(u,v,x,y,image,palette)
     local searchedColor = image:getPx(u,v)
 
-    local r,g,b = 1+math.floor(searchedColor[1]*255+0.5),1+math.floor(searchedColor[2]*255+0.5),1+math.floor(searchedColor[3]*255+0.5)
+    local r,g,b = 1+math.floor(searchedColor[1]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[2]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[3]*(self.cacheSize-1)+0.5)
 
     local combination = nil
     if ( self.cacheCombination[r][g][b] ) then
@@ -405,7 +404,7 @@ function CharCombinator:findCombination(u,v,x,y,image,palette)
                             local color = comb[1]
                             local closeness = comb[2]
 
-                            local dif = differenceColors(color,searchedColor)
+                            local dif = color:distanceOklab(searchedColor)
 
                             -- inline sorted insertion
                             local inserted = false
