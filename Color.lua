@@ -145,12 +145,9 @@ end
 
 function Color:toHex()
     local rgb = {round(self[1]*255),round(self[2]*255),round(self[3]*255)}
-    local hex = ""
-    for i=1,3 do
-        local n1 = (rgb[i] % 16)
-        local n2 = hexTable[(round((rgb[i]-n1)/16)%16)+1]
-        hex = hex..hexTable[n1+1]..n2
-    end
+    local hex = hexTable[(rgb[1] % 16)+1]..hexTable[(round((rgb[1]-(rgb[1] % 16))/16)%16)+1]..
+        hexTable[(rgb[2] % 16)+1]..hexTable[(round((rgb[2]-(rgb[2] % 16))/16)%16)+1]..
+        hexTable[(rgb[3] % 16)+1]..hexTable[(round((rgb[3]-(rgb[3] % 16))/16)%16)+1]
     return hex
 end
 
