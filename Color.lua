@@ -125,7 +125,7 @@ function Color:toOklab()
     -- Normalize to appropriate range
     local k1, k2 = 0.206, 0.03
     local k3 = (1 + k1) / (1 + k2)
-    L = 0.5 * (k3 * L - k1 + math.sqrt((k3 * L - k1) ^ 2 + 4 * k2 * k3 * L))t
+    L = 0.5 * (k3 * L - k1 + math.sqrt((k3 * L - k1) ^ 2 + 4 * k2 * k3 * L))
     return Color:new( 100 * L, 100 * A, 100 * B, self[4] )
 end
 
