@@ -25,8 +25,9 @@ local function round(x)
     return math.floor(x+0.5)
 end
 
-function combinator:new()
-    local o = {}
+function combinator:new(cacheSize)
+    cacheSize = cacheSize or 10
+    local o = {cacheSize=cacheSize,cache={}}
     setmetatable(o,{
         __index=function(_,k)
             return self[k]
@@ -35,18 +36,25 @@ function combinator:new()
     return o
 end
 
-function combinator:init()
-
+function combinator:init(image,palette)
+    self.cache = {}
 end
 
 function combinator:findCombination(u,v,x,y,image,palette,renderer)
+    local function addToCache(rawcol)
+        
+        col = Color:new(round(rawcol[1]*self.cacheSize)/self.cacheSize,round(rawcol[2]*self.cacheSize)/self.cacheSize,round(rawcol[3]*self.cacheSize)/self.cacheSize)
+        local hcol = col:toHex()
+        self.cache[hcol] = self.cache[hcol] and self.cache[hcol] or col:findClosest(palette)
+        return self.cache[hcol]
+    end
     local combination = {}
     local step = 1/(renderer.sy-1)
     if (y-1)%2 == 0 then
-        local col = image:getPx(u,v):findClosest(palette)
+        local col = addToCache(image:getPx(u,v))
         local othercol = image:getPx(u,v+step*2/3)
         if othercol then
-            othercol = othercol:findClosest(palette)
+            othercol = addToCache(othercol)
         else
             othercol = 1
         end
@@ -56,10 +64,10 @@ function combinator:findCombination(u,v,x,y,image,palette,renderer)
     else
         local col = image:getPx(u,v+step/3)
         col = col and col or image:getPx(u,v)
-        col = col:findClosest(palette)
+        col = addToCache(col)
         local othercol = image:getPx(u,v-step/3)
         if othercol then
-            othercol = othercol:findClosest(palette)
+            othercol = addToCache(othercol)
         else
             othercol = 1
         end
