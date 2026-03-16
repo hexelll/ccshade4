@@ -320,7 +320,8 @@ function RoughCharCombinator:new(cacheSize,usedChars)
     return o
 end
 
-function RoughCharCombinator:init(image,palette)
+function RoughCharCombinator:init(palette)
+
     local combinationTable = {}
     for textColNum=1,#palette do
 
@@ -380,7 +381,7 @@ function RoughCharCombinator:findCombination(u,v,x,y,image,palette)
 
         local best = {
             10000,
-            -1,
+            0,
             0,
             0,
         }

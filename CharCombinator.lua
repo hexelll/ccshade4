@@ -322,7 +322,7 @@ function CharCombinator:new(nbSearched,cacheSize,usedChars)
 end
 
 
-function CharCombinator:init(image,palette)
+function CharCombinator:init(palette)
 
     local combinationTable = {}
     for textColNum=1,#palette do
