@@ -55,7 +55,7 @@ function Renderer:render(image,palette)
     end
     palette = palette and palette or image:findPalette()
     
-    local equal = false
+    local equal = true
     if self.lastPalette then
         for i=1,#palette do
             if not (self.lastPalette[i] == palette[i]) then
@@ -63,6 +63,8 @@ function Renderer:render(image,palette)
                 break
             end
         end
+    else
+        equal = false
     end
     if not equal then
         for _,combinator in pairs(self.combinators) do
