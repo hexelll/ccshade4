@@ -68,7 +68,7 @@ function Renderer:render(image,palette)
     end
     if not equal then
         for _,combinator in pairs(self.combinators) do
-            combinator:init(image,palette)
+            combinator:init(palette)
         end
     end
     self.lastPalette = palette
