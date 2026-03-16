@@ -54,9 +54,20 @@ function Renderer:render(image,palette)
         print("start render")
     end
     palette = palette and palette or image:findPalette()
-    for _,combinator in pairs(self.combinators) do
-        combinator:init(image,palette)
+    self.lastPalette = self.lastPalette and self.lastPalette or palette
+    local equal = true
+    for i=1,#palette do
+        if not (self.lastPalette[i] == palette[i]) then
+            equal = false
+            break
+        end
     end
+    if not equal then
+        for _,combinator in pairs(self.combinators) do
+            combinator:init(image,palette)
+        end
+    end
+    self.lastPalette = palette
     self.palette = palette
     local timeYield = os.clock()
     local lines = {}

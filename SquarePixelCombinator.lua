@@ -36,13 +36,12 @@ function combinator:new(cacheSize)
     return o
 end
 
-function combinator:init(image,palette)
+function combinator:init(palette)
     self.cache = {}
 end
 
 function combinator:findCombination(u,v,x,y,image,palette,renderer)
     local function addToCache(rawcol)
-        
         col = Color:new(round(rawcol[1]*self.cacheSize)/self.cacheSize,round(rawcol[2]*self.cacheSize)/self.cacheSize,round(rawcol[3]*self.cacheSize)/self.cacheSize)
         local hcol = col:toHex()
         self.cache[hcol] = self.cache[hcol] and self.cache[hcol] or col:findClosest(palette)
