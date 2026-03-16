@@ -280,20 +280,6 @@ local charCoefs = {
     17/54 ,
 }
 
---[[
-local combineColors = function (colorT,colorB,coef) 
-    local r = colorT[1]*coef + (1-coef)*colorB[1]
-    local g = colorT[2]*coef + (1-coef)*colorB[2]
-    local b = colorT[3]*coef + (1-coef)*colorB[3]
-    return {r,g,b}
-end
-
--- Calculate the difference between two colors
-local differenceColors = function (color1,color2)
-    return ( (color1[1]-color2[1])^2+(color1[2]-color2[2])^2+(color1[3]-color2[3])^2 )
-end
-]]
-
 function CharCombinator:new(nbSearched,cacheSize,usedChars)
     local o = {}
 
@@ -349,7 +335,7 @@ function CharCombinator:init(image,palette)
             local colorB = palette[backColNum]
             combinationTable[textColNum][backColNum] = {}
 
-            local closeness = colorT:distanceOklab(colorB) 
+            local closeness = colorT:distance(colorB) 
 
             if (textColNum~=backColNum) then
 
@@ -404,7 +390,7 @@ function CharCombinator:findCombination(u,v,x,y,image,palette)
                             local color = comb[1]
                             local closeness = comb[2]
 
-                            local dif = color:distanceOklab(searchedColor)
+                            local dif = color:distance(searchedColor)
 
                             -- inline sorted insertion
                             local inserted = false
