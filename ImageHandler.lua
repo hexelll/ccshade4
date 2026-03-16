@@ -16,7 +16,7 @@ local function uvToIndex(sx,sy,u,v)
     return y*sx + x + 1
 end
 
-function ImageHandler:new(sx,sy,data,dontDoUnique)
+function ImageHandler:new(sx,sy,data,debug)
 
     local sx,sy = math.max(sx,0),math.max(sy,0)
 
@@ -27,7 +27,7 @@ function ImageHandler:new(sx,sy,data,dontDoUnique)
         end
     end
 
-    local o = {sx=sx,sy=sy,data=data,uniqueColors={},doUnique=not dontDoUnique}
+    local o = {sx=sx,sy=sy,data=data,uniqueColors={},debug=debug}
 
     setmetatable(o,{
         __index=function(_,k)
@@ -38,6 +38,15 @@ function ImageHandler:new(sx,sy,data,dontDoUnique)
     return o
 end
 
+function ImageHandler:copy()
+    local newData = {}
+    for i=1,#self.data do
+        newData[i] = self.data[i]
+    end
+
+    local img = ImageHandler:new(self.sx,self.sy,newData)
+    return img
+end
 function ImageHandler:duplicate()
     local newData = {}
     for i=1,#self.data do
@@ -45,8 +54,6 @@ function ImageHandler:duplicate()
     end
 
     local img = ImageHandler:new(self.sx,self.sy,newData)
-    img.uniqueColors = self.uniqueColors
-    img.doUnique = self.doUnique
     return img
 end
 
@@ -72,20 +79,35 @@ end
 function ImageHandler:setPx(u,v,color)
     local index = uvToIndex(self.sx,self.sy,u,v)
     self.data[index] = color
-    if self.doUnique then
-        self.uniqueColors[color:toHex()] = color
-    end
     return self
 end
 
+function ImageHandler:findUniqueColors(interval)
+    interval = interval or 0.01
+    self.uniqueColors = {}
+    for u=0,1,interval do
+        for v=0,1,interval do
+            local color = self:getPx(u,v)
+            self.uniqueColors[color:toHex()] = color
+        end
+    end
+end
+
 function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
+    local t
+    if self.debug then
+        t = os.clock()
+        print("start findPalette")
+    end
+    self:findUniqueColors()
     distanceFunction = distanceFunction and distanceFunction or Color.distance
-    maxIteration=maxIteration and maxIteration or 10
-    eps=eps and eps or 0.05
+    maxIteration=maxIteration and maxIteration or 50
+    eps=eps and eps or 0.0001
     paletteSize = paletteSize and paletteSize or 16
     local palette = {}
     for i=1,paletteSize do
-        local c = Color:new(term.nativePaletteColor(2^(i-1)))
+        local r,g,b = term.nativePaletteColor(2^(i-1))
+        local c = Color:new(r,g,b,1)
         palette[i] = c
     end
     for _=1,maxIteration do
@@ -133,6 +155,9 @@ function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
             break
         end
     end
+    if self.debug then
+        print("end findPalette:",os.clock()-t)
+    end
     return palette
 end
 
@@ -147,13 +172,20 @@ function ImageHandler:initUnique()
 end
 
 function ImageHandler:process(shader)
-    self.uniqueColors = {}
+    local t
+    if self.debug then
+        t = os.clock()
+        print("start process")
+    end
     for i=0,self.sx-1 do
         for j=0,self.sy-1 do
             local u,v = i/(self.sx-1),j/(self.sy-1)
             local color = shader(self,u,v)
             self:setPx(u,v,color)
         end
+    end
+    if self.debug then
+        print("end process:",os.clock()-t)
     end
     return self
 end
