@@ -13,6 +13,7 @@ function Renderer:new(params)
     o.sx,o.sy = params.sx and params.sx or width, params.sy and params.Sy or height
     o.mask = params.mask and params.mask
     o.px,o.py = params.px and params.px or 0, params.py and params.py or 0
+    o.debug = params.debug
     if not o.mask then
         o.mask = ImageHandler:new(o.sx,o.sy,nil,true)
         for i=0,o.sx-1 do
@@ -47,6 +48,11 @@ function Renderer:getCombinator(u,v)
 end
 
 function Renderer:render(image,palette)
+    local t
+    if self.debug then
+        t = os.clock()
+        print("start render")
+    end
     palette = palette and palette or image:findPalette()
     for _,combinator in pairs(self.combinators) do
         combinator:init(image,palette)
@@ -70,6 +76,9 @@ function Renderer:render(image,palette)
             end
         end
     end
+    if self.debug then
+        print("end render:",os.clock()-t)
+    end
     return {lines=lines,display=function()
         self:display(lines)
         return self
@@ -77,6 +86,11 @@ function Renderer:render(image,palette)
 end
 
 function Renderer:display(lines)
+    local t
+    if self.debug then
+        t = os.clock()
+        print("start display")
+    end
     local palette = self.palette
     for i=1,#palette do
         self.term.setPaletteColor(2^(i-1),palette[i][1],palette[i][2],palette[i][3])
@@ -84,6 +98,9 @@ function Renderer:display(lines)
     for i=1,#lines do
         self.term.setCursorPos(1+self.px,i+self.py)
         self.term.blit(table.unpack(lines[i]))
+    end
+    if self.debug then
+        print("end display:",os.clock()-t)
     end
     return self
 end
