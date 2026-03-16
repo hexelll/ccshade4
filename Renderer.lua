@@ -54,12 +54,14 @@ function Renderer:render(image,palette)
         print("start render")
     end
     palette = palette and palette or image:findPalette()
-    self.lastPalette = self.lastPalette and self.lastPalette or palette
-    local equal = true
-    for i=1,#palette do
-        if not (self.lastPalette[i] == palette[i]) then
-            equal = false
-            break
+    
+    local equal = false
+    if self.lastPalette then
+        for i=1,#palette do
+            if not (self.lastPalette[i] == palette[i]) then
+                equal = false
+                break
+            end
         end
     end
     if not equal then
