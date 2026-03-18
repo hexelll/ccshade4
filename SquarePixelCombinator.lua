@@ -49,7 +49,7 @@ function combinator:findCombination(u,v,image,palette,renderer)
     end
     local combination = {}
     local step = 1/(renderer.sy-1)
-    if (y-1)%2 == 0 then
+    if round(v*(renderer.sy-1))%2 == 0 then
         local col = addToCache(image:getPx(u,v))
         local othercol = image:getPx(u,v+step*2/3)
         if othercol then
