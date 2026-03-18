@@ -79,8 +79,8 @@ function Renderer:render(image,palette)
         lines[i] = {"","",""}
         for j=1,self.sx do
             local v,u = (i-1)/((self.sy-1)),(j-1)/((self.sx-1))
-            local combinator = self:getCombinator(u,v,j,i)
-            local combination = combinator:findCombination(u,v,j,i,image,palette,self)
+            local combinator = self:getCombinator(u,v)
+            local combination = combinator:findCombination(u,v,image,palette,self)
             lines[i][1] = lines[i][1]..combination[1]
             lines[i][2] = lines[i][2]..combination[2]
             lines[i][3] = lines[i][3]..combination[3]

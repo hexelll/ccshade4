@@ -26,7 +26,7 @@ local function round(x)
 end
 
 function combinator:new(cacheSize)
-    cacheSize = cacheSize or 10
+    cacheSize = cacheSize or 50
     local o = {cacheSize=cacheSize,cache={}}
     setmetatable(o,{
         __index=function(_,k)
@@ -40,7 +40,7 @@ function combinator:init(palette)
     self.cache = {}
 end
 
-function combinator:findCombination(u,v,x,y,image,palette,renderer)
+function combinator:findCombination(u,v,image,palette,renderer)
     local function addToCache(rawcol)
         col = Color:new(round(rawcol[1]*self.cacheSize)/self.cacheSize,round(rawcol[2]*self.cacheSize)/self.cacheSize,round(rawcol[3]*self.cacheSize)/self.cacheSize)
         local hcol = col:toHex()
