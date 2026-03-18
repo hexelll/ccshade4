@@ -301,15 +301,6 @@ function RoughCharCombinator:new(cacheSize,usedChars)
     end
 
     o.cacheCombination = {}
-    for r=1,o.cacheSize do
-        o.cacheCombination[r]={}
-        for g=1,o.cacheSize do
-            o.cacheCombination[r][g]={}
-            for b=1,o.cacheSize do
-                o.cacheCombination[r][g][b] = nil
-            end
-        end
-    end
 
     setmetatable(o,{
         __index=function(_,k)
@@ -356,25 +347,26 @@ function RoughCharCombinator:init(palette)
     end
     self.combinationTable = combinationTable
 
-    self.cacheCombination = {}
-    for r=1,self.cacheSize do
-        self.cacheCombination[r]={}
-        for g=1,self.cacheSize do
-            self.cacheCombination[r][g]={}
-            for b=1,self.cacheSize do
-                self.cacheCombination[r][g][b] = nil
-            end
-        end
+    for i=1,self.cacheSize^3 do
+        self.cacheCombination[i]=nil
     end
 end
 
-function RoughCharCombinator:findCombination(u,v,x,y,image,palette)
+function round(x)
+    return math.floor(x+0.5)
+end
+
+function colorToIndex(c,size) 
+    return round(c[1]*(size-1)^2)+round(c[2]*(size-1))+round(c[3])
+end
+
+function RoughCharCombinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
-    local r,g,b = 1+math.floor(searchedColor[1]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[2]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[3]*(self.cacheSize-1)+0.5)
+    local index = colorToIndex(searchedColor,self.cacheSize)
 
-    if ( self.cacheCombination[r][g][b] ) then
-        return self.cacheCombination[r][g][b]
+    if ( self.cacheCombination[index] ) then
+        return self.cacheCombination[index]
     else  
         local combinationTable = self.combinationTable
         local usedChars = self.usedChars
@@ -416,7 +408,7 @@ function RoughCharCombinator:findCombination(u,v,x,y,image,palette)
 
         local combination = {string.char(best[2]),hexTable[best[3]],hexTable[best[4]]}
   
-        self.cacheCombination[r][g][b] = combination
+        self.cacheCombination[index] = combination
 
         return combination
     end
