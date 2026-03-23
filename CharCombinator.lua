@@ -1,4 +1,3 @@
-local Color = require("Color")
 
 local CharCombinator = {}
 
