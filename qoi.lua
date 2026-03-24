@@ -88,10 +88,13 @@ function qoi.decode(data)
     end
     local pixelsLen = desc.width*desc.height
 
-    local index = {}
-    for i=1,64 do
-        index[i] = 0
-    end
+    local index = {
+		-- 64 RGBA pixels.
+		0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
+		0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
+		0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
+		0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
+	}
     local px = {
         r=0,
         g=0,
@@ -120,23 +123,36 @@ function qoi.decode(data)
                 px.b = index[hash4+3]
                 px.a = index[hash4+4]
             elseif bit.band(b1,qoi.mask2) == qoi.opDiff then
-                px.r = px.r+bit.band(bit.rshift(b1,4),0x03) - 2
-                px.g = px.r+bit.band(bit.rshift(b1,2),0x03) - 2
-                px.b = px.r+bit.band(b1,0x03) - 2
+                b1 = b1 - 64
+				px.r = px.r + bit.rshift(bit.band(b1, 48--[[00110000]]), 4) - 2
+				px.g = px.g + bit.rshift(bit.band(b1, 12--[[00001100]]), 2) - 2
+				px.b = px.b +        bit.band(b1, 3 --[[00000011]])     - 2
             elseif bit.band(b1,qoi.mask2) == qoi.opLuma then
                 local b2 = getByte()
-                local vg = bit.band(b1,0x3f) - 32
-                px.r = px.r + vg-8+bit.band(bit.rshift(b2,4),0x0f)
-                px.g = px.g + vg
-                px.b = px.b + vg-8+bit.band(b2,0x0f)
+                local diffG = b1 + (-(128--[[10000000]]) - 32)
+				px.g = px.g + diffG
+				px.r = px.r + diffG + bit.rshift(bit.band(b2, 240--[[11110000]]), 4) - 8
+				px.b = px.b + diffG +        bit.band(b2, 15 --[[00001111]])     - 8
             elseif bit.band(b1,qoi.mask2) == qoi.opRun then
                 run = bit.band(b1,0x3f)
             end
             local hash = bit.lshift(bit.band(qoi.colorHash(px),63),2)
+            
+             if px.r < 0 then
+                px.r = px.r + 256
+            end
+            if px.g < 0 then
+                px.g = px.g + 256
+            end
+            if px.b < 0 then
+                px.b = px.b + 256
+            end
+
             index[hash+1] = px.r
             index[hash+2] = px.g
             index[hash+3] = px.b
             index[hash+4] = px.a
+           
         end
         pixels[pxPos] = {px.r,px.g,px.b,px.a}
     end
