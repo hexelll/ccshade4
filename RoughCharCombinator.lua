@@ -311,8 +311,7 @@ function RoughCharCombinator:new(cacheSize,usedChars)
     return o
 end
 
-function RoughCharCombinator:init(palette)
-
+function RoughCharCombinator:onPaletteChange(palette)
     local combinationTable = {}
     for textColNum=1,#palette do
 
@@ -350,6 +349,10 @@ function RoughCharCombinator:init(palette)
     for i=1,self.cacheSize^3 do
         self.cacheCombination[i]=nil
     end
+end
+
+function RoughCharCombinator:onImageChange()
+
 end
 
 function round(x)

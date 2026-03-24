@@ -68,9 +68,14 @@ function Renderer:render(image,palette)
     end
     if not equal then
         for _,combinator in pairs(self.combinators) do
-            combinator:init(palette)
+            combinator:onPaletteChange(palette)
         end
     end
+
+    for _,combinator in pairs(self.combinators) do
+        combinator:onImageChange(image)
+    end
+    
     self.lastPalette = palette
     self.palette = palette
     local timeYield = os.clock()

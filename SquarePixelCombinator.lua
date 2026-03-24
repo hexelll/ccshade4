@@ -36,8 +36,12 @@ function combinator:new(cacheSize)
     return o
 end
 
-function combinator:init(palette)
+function combinator:onPaletteChange()
     self.cache = {}
+end
+
+function combinator:onImageChange()
+
 end
 
 function combinator:findCombination(u,v,image,palette,renderer)
@@ -55,7 +59,7 @@ function combinator:findCombination(u,v,image,palette,renderer)
         if othercol then
             othercol = addToCache(othercol)
         else
-            othercol = 1
+            othercol = addToCache(image:getPx(u,v))
         end
         combination[1] = '\143'
         combination[2] = hexTable[col]
@@ -68,7 +72,7 @@ function combinator:findCombination(u,v,image,palette,renderer)
         if othercol then
             othercol = addToCache(othercol)
         else
-            othercol = 1
+            othercol = addToCache(image:getPx(u,v))
         end
         combination[1] = '\131'
         combination[3] = hexTable[col]

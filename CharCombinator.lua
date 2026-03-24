@@ -312,7 +312,7 @@ function CharCombinator:new(nbSearched,cacheSize,usedChars)
 end
 
 
-function CharCombinator:init(palette)
+function CharCombinator:onPaletteChange(palette)
 
     local combinationTable = {}
     for textColNum=1,#palette do
@@ -351,6 +351,10 @@ function CharCombinator:init(palette)
     for i=1,self.cacheSize^3 do
         self.cacheCombination[i]=nil
     end
+end
+
+function CharCombinator:onImageChange(image)
+
 end
 
 function round(x)

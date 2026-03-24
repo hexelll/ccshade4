@@ -32,12 +32,18 @@ function SimpleCombinator:new()
     return o
 end
 
-function SimpleCombinator:init()
+function SimpleCombinator:onPaletteChange()
+
+end
+
+function SimpleCombinator:onImageChange()
 
 end
 
 function SimpleCombinator:findCombination(u,v,image,palette)
-    local indexColor = image:getPx(u,v):findClosest(palette)
+    local px = image:getPx(u,v)
+    px = px and px or Color:new()
+    indexColor = px:findClosest(palette)
     return {string.char(0),"0",hexTable[indexColor]}
 end
 
