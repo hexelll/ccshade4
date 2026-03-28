@@ -34,10 +34,14 @@ local function colorToIndex(c, size)
     return r * size * size + g * size + b
 end
 
-function SimpleCombinator:new()
+function SimpleCombinator:new(args)
+    --[[ args {
+        cacheSize = int
+    } ]]
+
     local o = {}
 
-    o.cacheSize = cacheSize and cacheSize or 100
+    o.cacheSize = args.cacheSize and args.cacheSize or 100
     o.cache = {}
 
     setmetatable(o,{

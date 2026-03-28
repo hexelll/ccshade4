@@ -280,12 +280,17 @@ local charCoefs = {
     17/54 ,
 }
 
-function RoughCharCombinator:new(cacheSize,usedChars)
+function RoughCharCombinator:new(args)
+    --[[ args {
+        cacheSize = int
+        usedChars = {int} array of char number
+    } ]]
+
     local o = {}
 
-    o.cacheSize = cacheSize and cacheSize or 100
+    o.cacheSize = args.cacheSize and args.cacheSize or 100
     
-    o.usedChars = usedChars and usedChars or {}
+    o.usedChars = args.usedChars and args.usedChars or {}
     if ( #o.usedChars == 0) then
         o.usedChars = {}
         for i=1,255 do

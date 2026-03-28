@@ -279,13 +279,19 @@ local charCoefs = {
     17/54 ,
 }
 
-function CharCombinator:new(nbSearched,cacheSize,usedChars)
+function CharCombinator:new(args)
+    --[[ args {
+        nbSearched = int
+        cacheSize = int
+        usedChars = {int} array of char number
+    } ]]
+
     local o = {}
 
-    o.nbSearched = nbSearched and nbSearched or 1
-    o.cacheSize = cacheSize and cacheSize or 100
+    o.nbSearched = args.nbSearched and args.nbSearched or 1
+    o.cacheSize = args.cacheSize and args.cacheSize or 100
     
-    o.usedChars = usedChars and usedChars or {}
+    o.usedChars = args.usedChars and args.usedChars or {}
     if ( #o.usedChars == 0) then
         o.usedChars = {}
         for i=1,255 do

@@ -37,55 +37,65 @@ local function colorToIndex(c, size)
     return r * size * size + g * size + b
 end
 
-function VerboseCombinator:new(textColor,backColor,usedColors,usedStrings,stringSeparator,cacheSize,cascadeRatio)
+function VerboseCombinator:new(args)
+    --[[ args {
+        textColor = Color or number or nil or function(pixelColor,palette)
+        backColor = Color or number or nil or function(pixelColor,palette)
+        usedColors = {Color or string}
+        usedStrings = {string}
+        stringSeparator = string
+        cacheSize = int
+        cascadeRatio = int
+    } ]]
+        
     local o = {}
 
-    local typeTextColor = type(textColor)
+    local typeTextColor = type(args.textColor)
     if ( typeTextColor == "table" )then
-        o.desiredTextColor = textColor
+        o.desiredTextColor = args.textColor
 
     elseif ( typeTextColor == "number" ) then
         o.textColorShader = function (pixelColor,palette)
             local r,g,b = table.unpack(pixelColor)
-            return Color:new(clamp(r*textColor),clamp(g*textColor),clamp(b*textColor)):findClosest(palette)
+            return Color:new(clamp(r*args.textColor),clamp(g*args.textColor),clamp(b*args.textColor)):findClosest(palette)
         end
 
     elseif ( typeTextColor == "function" ) then
-        o.textColorShader = textColor
+        o.textColorShader = args.textColor
     end
 
-    local typeBackColor = type(backColor)
+    local typeBackColor = type(args.backColor)
     if ( typeBackColor == "table" )then
-        o.desiredBackColor = backColor
+        o.desiredBackColor = args.backColor
 
     elseif ( typeBackColor == "number" ) then
         o.backColorShader = function (pixelColor,palette)
             local r,g,b = table.unpack(pixelColor)
-            return Color:new(clamp(r*backColor),clamp(g*backColor),clamp(b*backColor)):findClosest(palette)
+            return Color:new(clamp(r*args.backColor),clamp(g*args.backColor),clamp(b*args.backColor)):findClosest(palette)
         end
 
     elseif ( typeBackColor == "function" ) then
-        o.backColorShader = backColor
+        o.backColorShader = args.backColor
     end
 
-    o.usedColors = usedColors and usedColors or {}
+    o.usedColors = args.usedColors and args.usedColors or {}
     for i, color in ipairs(o.usedColors) do
         if (type(color)=="string") then
             o.usedColors[i] = Color.fromHex(color)
         end
     end
 
-    o.usedStrings = usedStrings and usedStrings or {}
-    if (stringSeparator) then
+    o.usedStrings = args.usedStrings and args.usedStrings or {}
+    if (args.stringSeparator) then
         for i, string in ipairs(o.usedStrings) do
-            o.usedStrings[i] = string..stringSeparator 
+            o.usedStrings[i] = string..args.stringSeparator 
         end
     end
 
-    o.cascadeRatio = cascadeRatio and cascadeRatio or 0;
+    o.cascadeRatio = args.cascadeRatio and args.cascadeRatio or 0;
 
     o.cache = {}
-    o.cacheSize = cacheSize and cacheSize or 100
+    o.cacheSize = args.cacheSize and args.cacheSize or 100
 
     setmetatable(o,{
         __index=function(_,k)
