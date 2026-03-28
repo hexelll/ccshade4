@@ -348,31 +348,33 @@ function CharCombinator:onPaletteChange(palette)
     end
     self.combinationTable = combinationTable
 
-    for i=1,self.cacheSize^3 do
-        self.cacheCombination[i]=nil
-    end
+    self.cacheCombination = {}
 end
 
 function CharCombinator:onImageChange(image)
 
 end
 
-function round(x)
+local function round(x)
     return math.floor(x+0.5)
 end
 
-function colorToIndex(c,size) 
-    return round(c[1]*(size-1)^2)+round(c[2]*(size-1))+round(c[3])
+local function colorToIndex(c, size)
+    local r = round(c[1] * (size - 1))
+    local g = round(c[2] * (size - 1))
+    local b = round(c[3] * (size - 1))
+
+    return r * size * size + g * size + b
 end
 
 function CharCombinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
-    --local r,g,b = 1+math.floor(searchedColor[1]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[2]*(self.cacheSize-1)+0.5),1+math.floor(searchedColor[3]*(self.cacheSize-1)+0.5)
     local index = colorToIndex(searchedColor,self.cacheSize)
 
-    if ( self.cacheCombination[index] ) then
-        return self.cacheCombination[index]
+    local cacheResult = self.cacheCombination[index]
+    if ( cacheResult ) then
+        return cacheResult
     else    
         local combinationTable = self.combinationTable
         local usedChars = self.usedChars
