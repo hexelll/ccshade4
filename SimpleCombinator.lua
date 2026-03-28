@@ -22,8 +22,24 @@ local hexTable = {
     "f"
 }
 
+local function round(x)
+    return math.floor(x+0.5)
+end
+
+local function colorToIndex(c, size)
+    local r = round(c[1] * (size - 1))
+    local g = round(c[2] * (size - 1))
+    local b = round(c[3] * (size - 1))
+
+    return r * size * size + g * size + b
+end
+
 function SimpleCombinator:new()
     local o = {}
+
+    o.cacheSize = cacheSize and cacheSize or 100
+    o.cache = {}
+
     setmetatable(o,{
         __index=function(_,k)
             return self[k]
@@ -33,7 +49,7 @@ function SimpleCombinator:new()
 end
 
 function SimpleCombinator:onPaletteChange()
-
+    self.cache = {}
 end
 
 function SimpleCombinator:onImageChange()
@@ -42,9 +58,19 @@ end
 
 function SimpleCombinator:findCombination(u,v,image,palette)
     local px = image:getPx(u,v)
-    px = px and px or Color:new()
-    indexColor = px:findClosest(palette)
-    return {string.char(0),"0",hexTable[indexColor]}
+
+    local index = colorToIndex(px,self.cacheSize)
+
+    local cacheResult = self.cache[index]
+    if ( cacheResult ) then
+        return cacheResult
+    else  
+        local indexColor = px:findClosest(palette)
+
+        local combination = {string.char(0),"0",hexTable[indexColor]}
+        self.cache[index] = combination
+        return combination
+    end
 end
 
 return SimpleCombinator
