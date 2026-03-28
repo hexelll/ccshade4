@@ -48,6 +48,9 @@ end
 
 -- rgb 0-1
 function Color:new(r,g,b,a)
+    if type(r) == "string" then
+        return Color.fromHex(r)
+    end
     r = r and r or 0
     g = g and g or 0
     b = b and b or 0
@@ -82,7 +85,7 @@ function Color:new(r,g,b,a)
 end
 
 function Color:distance(color)
-    return (self[1]-color[1])^2+(self[2]-color[2])^2+(self[3]-color[3])^2+(self[4]-color[4])^2
+    return (self[1]-color[1])^2+(self[2]-color[2])^2+(self[3]-color[3])^2
 end
 
 local function interp(a,b,k)
@@ -138,9 +141,11 @@ end
 
 function Color.fromHex(hex)
     hex = string.lower(hex)
+    local j = hex:sub(1,1) == "#" and 1 or 0
+    print(j)
     local rgb = {}
     for i=0,2 do
-        local n = hexTableI[hex:sub(2*i+1,2*i+1)]+hexTableI[hex:sub(2*i+2,2*i+2)]*16
+        local n = hexTableI[hex:sub(j+2*i+1,j+2*i+1)]+hexTableI[hex:sub(j+2*i+2,j+2*i+2)]*16
         rgb[i+1] = n/255
     end
     return Color:new(table.unpack(rgb))
@@ -157,5 +162,9 @@ end
 function Color:duplicate()
     return Color:new(table.unpack(self))
 end
+
+setmetatable(Color,{__call=function(self,...)
+    return self:new(...)
+end})
 
 return Color
