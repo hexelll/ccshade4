@@ -95,7 +95,7 @@ function VerboseCombinator:new(args)
 
     o.edgeSeparator = args.edgeSeparator and string.sub(args.edgeSeparator,1,1) or " "
 
-    o.shiftToEdges = args.shiftToEdges and args.shiftToEdges or true
+    o.shiftToEdges = args.shiftToEdges
     o.lastBoundaryPosition = math.huge
     o.lastBoundaryStringIndex = -1
 
@@ -184,8 +184,6 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
                 i = round( texelPosition - self.lastBoundaryPosition -offset + self.cascadeRatio*v*(renderer.sy-1) ) % usedString:len() +1
                 char = string.sub(usedString,i,i)
             end
-            
-
             
         else 
             local i = round( u* (renderer.sx-1) + self.cascadeRatio*v*(renderer.sy-1)  ) % usedString:len() +1
