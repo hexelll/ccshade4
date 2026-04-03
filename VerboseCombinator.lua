@@ -78,7 +78,7 @@ function VerboseCombinator:new(args)
         o.backColorShader = args.backColor
     end
 
-    o.usedColors = args.usedColors and args.usedColors or {}
+    o.usedColors = args.usedColors and args.usedColors or nil
     for i, color in ipairs(o.usedColors) do
         if (type(color)=="string") then
             o.usedColors[i] = Color.fromHex(color)
@@ -91,8 +91,15 @@ function VerboseCombinator:new(args)
             o.usedStrings[i] = string..args.stringSeparator 
         end
     end
+    o.stringSeparator = args.stringSeparator and args.stringSeparator or ""
 
-    o.cascadeRatio = args.cascadeRatio and args.cascadeRatio or 0;
+    o.edgeSeparator = args.edgeSeparator and string.sub(args.edgeSeparator,1,1) or " "
+
+    o.shiftToEdges = args.shiftToEdges and args.shiftToEdges or true
+    o.lastBoundaryPosition = math.huge
+    o.lastBoundaryStringIndex = -1
+
+    o.cascadeRatio = args.cascadeRatio and args.cascadeRatio or 0
 
     o.cache = {}
     o.cacheSize = args.cacheSize and args.cacheSize or 100
@@ -151,13 +158,40 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
         self.cache[index] = {indexT,indexB}
     end
 
-    local stringIndex = self.usedColors and pixelColor:findClosest(self.usedColors) or nil ;
+    local usedStringIndex = self.usedColors and pixelColor:findClosest(self.usedColors) or nil ;
     
     local char = ' ';
-    if ( stringIndex ) then
-        local txt = self.usedStrings[stringIndex]
-        local i = round( u* (renderer.sx-1) + self.cascadeRatio*v*(renderer.sy-1)  ) % txt:len() +1
-        char = string.sub(txt,i,i)
+    if ( usedStringIndex ) then 
+        local usedString = self.usedStrings[usedStringIndex]
+
+        if (self.shiftToEdges) then
+
+            local i
+
+            local texelPosition = u*(renderer.sx-1)
+            
+            if ( texelPosition < self.lastBoundaryPosition) then
+                self.lastBoundaryPosition = texelPosition 
+                self.lastBoundaryStringIndex = usedStringIndex
+            end
+            if (usedStringIndex ~= self.lastBoundaryStringIndex) then
+                self.lastBoundaryPosition = texelPosition 
+                self.lastBoundaryStringIndex = usedStringIndex
+
+                char = self.edgeSeparator
+            else
+                local offset = self.lastBoundaryPosition == 0 and 0 or 1
+                i = round( texelPosition - self.lastBoundaryPosition -offset + self.cascadeRatio*v*(renderer.sy-1) ) % usedString:len() +1
+                char = string.sub(usedString,i,i)
+            end
+            
+
+            
+        else 
+            local i = round( u* (renderer.sx-1) + self.cascadeRatio*v*(renderer.sy-1)  ) % usedString:len() +1
+            char = string.sub(usedString,i,i)
+        end 
+        
     end
     
     return {char,hexTable[indexT],hexTable[indexB]}
