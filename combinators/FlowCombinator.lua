@@ -28,8 +28,11 @@ local hexTable = {
 
 local combinator = {}
 
-function combinator:new()
+function combinator:new(args)
     local o = {}
+    o.invert = args.invert
+    o.limit = args.limit and args.limit or 0.2
+    o.defaultchar = args.defaultchar and args.defaultchar or '`'
     setmetatable(o,{__index=self})
     return o
 end
@@ -73,13 +76,18 @@ function combinator:findCombination(u,v,image,palette,renderer)
         end
     end
     local l = math.sqrt(vec[1]^2+vec[2]^2)
-    local char = '`'
-    if l > 0 then
+    local char = self.defaultchar
+    if l > self.limit then
         vec[1] = vec[1]/l
         vec[2] = vec[2]/l
         char = findClosest(vec)[3]
     end
-    return {char,hexTable[Color:new():findClosest(palette)],hexTable[color:findClosest(palette)]}
+    local fg = hexTable[Color:new():findClosest(palette)]
+    local bg = hexTable[color:findClosest(palette)]
+    if not self.invert then
+        fg,bg=bg,fg
+    end
+    return {char,fg,bg}
 end
 
 return combinator

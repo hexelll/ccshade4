@@ -1,12 +1,11 @@
 local Renderer = {}
-local SimpleCombinator = require "SimpleCombinator"
 local Color = require "Color"
 local ImageHandler = require "ImageHandler"
 
 function Renderer:new(params)
     local o = {}
     o.term = params.term and params.term or term
-    o.defaultcombinator = params.defaultcombinator and params.defaultcombinator or SimpleCombinator:new()
+    o.defaultcombinator = params.defaultCombinator and params.defaultCombinator or error("no default combinator given")
     local defaultcombinators = {o.defaultcombinator}
     o.combinators = params.combinators and params.combinators or defaultcombinators
     local width,height = o.term.getSize()
@@ -19,7 +18,7 @@ function Renderer:new(params)
         for i=0,o.sx-1 do
             for j=0,o.sy-1 do
                 local u,v = i/(o.sx-1),j/(o.sy-1)
-                o.mask:setPx(u,v,Color:new(defaultcombinators[1]))
+                o.mask:setPx(u,v,defaultcombinators[1])
             end
         end
     end
@@ -31,8 +30,8 @@ function Renderer:new(params)
     return o
 end
 
-function Renderer:setMask(u,v,combinator)
-    self.mask:setPx(u,v,Color:new(combinator))
+function Renderer:setMaskAt(u,v,combinator)
+    self.mask:setPx(u,v,combinator)
     return self
 end
 
@@ -44,7 +43,7 @@ function Renderer:resize(sx,sy)
 end
 
 function Renderer:getCombinator(u,v)
-    return self.mask:getPx(u,v)[1]
+    return self.mask:getPx(u,v)
 end
 
 function Renderer:render(image,palette)
