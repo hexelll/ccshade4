@@ -74,7 +74,7 @@ function combinator:findCombination(u,v,image,palette,renderer)
     end
     local l = math.sqrt(vec[1]^2+vec[2]^2)
     local char = '`'
-    if l > 0.01 then
+    if l > 0 then
         vec[1] = vec[1]/l
         vec[2] = vec[2]/l
         char = findClosest(vec)[3]

@@ -26,11 +26,16 @@ function MediaParser:parse(data,type)
         pixels,desc = self.parsers[type].decode(data)
     end
     local imageData = {}
+    local timeYield = os.clock()
     for i=1,#pixels do
+        if (os.clock() - timeYield > 5) then
+            sleep()
+            timeYield = os.clock()
+        end
         local p = pixels[i]
         imageData[i] = Color:new(p[1]/255,p[2]/255,p[3]/255,p[4]/255)
     end
-    return ImageHandler:new(desc.width,desc.height,imageData):initUnique()
+    return ImageHandler:new(desc.width,desc.height,imageData)
 end
 
 function MediaParser:open(path)

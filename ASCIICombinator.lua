@@ -46,7 +46,7 @@ function combinator:findCombination(u,v,image,palette)
     local px = image:getPx(u,v)
     px = px and px or Color:new()
     local k = (px[1]+px[2]+px[3])/3
-    return {chars[round(k*#chars)],hexTable[px:findClosest(palette)],hexTable[Color:new():findClosest(palette)]}
+    return {chars[1+round(k*(#chars-1))],hexTable[px:findClosest(palette)],hexTable[Color:new():findClosest(palette)]}
 end
 
 return combinator

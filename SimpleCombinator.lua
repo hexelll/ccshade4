@@ -38,7 +38,7 @@ function SimpleCombinator:new(args)
     --[[ args {
         cacheSize = int
     } ]]
-
+    args = args and args or {}
     local o = {}
 
     o.cacheSize = args.cacheSize and args.cacheSize or 100

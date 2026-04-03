@@ -102,7 +102,12 @@ function qoi.decode(data)
         a=255
     }
     local chunksLen = #data - #qoi.padding
+    local timeYield = os.clock()
     for pxPos=1,pixelsLen do
+        if (os.clock() - timeYield > 5) then
+            sleep()
+            timeYield = os.clock()
+        end
         if run > 0 then
             run=run-1
         elseif p.p < chunksLen then
