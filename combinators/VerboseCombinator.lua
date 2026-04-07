@@ -46,6 +46,7 @@ function VerboseCombinator:new(args)
         stringSeparator = string
         cacheSize = int
         cascadeRatio = int
+        shiftToEdges = 
     } ]]
         
     local o = {}
@@ -93,11 +94,13 @@ function VerboseCombinator:new(args)
     end
     o.stringSeparator = args.stringSeparator and args.stringSeparator or ""
 
-    o.edgeSeparator = args.edgeSeparator and string.sub(args.edgeSeparator,1,1) or " "
-
     o.shiftToEdges = args.shiftToEdges
-    o.lastBoundaryPosition = math.huge
-    o.lastBoundaryStringIndex = -1
+    if (o.shiftToEdges) then
+        o.edgeSeparator = args.edgeSeparator and string.sub(args.edgeSeparator,1,1) or ""
+        o.edgeSeperatorSize = o.edgeSeparator:len()
+        o.lastBoundaryPosition = math.huge
+        o.lastBoundaryStringIndex = -1
+    end
 
     o.cascadeRatio = args.cascadeRatio and args.cascadeRatio or 0
 
@@ -178,12 +181,18 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
                 self.lastBoundaryPosition = texelPosition 
                 self.lastBoundaryStringIndex = usedStringIndex
 
-                char = self.edgeSeparator
+                if (self.edgeSeperatorSize ~= 0) then
+                    char = self.edgeSeparator
+                else
+                    i = round( texelPosition - self.lastBoundaryPosition + self.cascadeRatio*v*(renderer.sy-1) ) % usedString:len() +1
+                    char = string.sub(usedString,i,i)
+                end
             else
-                local offset = self.lastBoundaryPosition == 0 and 0 or 1
+                local offset = self.lastBoundaryPosition == 0 and 0 or self.edgeSeperatorSize
                 i = round( texelPosition - self.lastBoundaryPosition -offset + self.cascadeRatio*v*(renderer.sy-1) ) % usedString:len() +1
                 char = string.sub(usedString,i,i)
             end
+
             
         else 
             local i = round( u* (renderer.sx-1) + self.cascadeRatio*v*(renderer.sy-1)  ) % usedString:len() +1
