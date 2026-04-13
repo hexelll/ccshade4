@@ -94,6 +94,7 @@ function ImageHandler:findUniqueColors(interval)
 end
 
 function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
+    sleep()
     local t
     if self.debug then
         t = os.clock()
@@ -190,6 +191,25 @@ function ImageHandler:process(shader)
         print("end process:",os.clock()-t)
     end
     return self
+end
+
+function ImageHandler:map(shader,sx,sy)
+    sx = sx and sx or self.sx
+    sy = sy and sy or self.sy
+    local newImg = ImageHandler:new(sx,sy)
+    local timeYield = os.clock()
+    for i=0,sx-1 do
+        for j=0,sy-1 do
+            if (os.clock() - timeYield > 5) then
+                sleep()
+                timeYield = os.clock()
+            end
+            local u,v = i/(sx-1),j/(sy-1)
+            local color = shader(self,u,v)
+            newImg:setPx(u,v,color)
+        end
+    end
+    return newImg
 end
 
 return ImageHandler

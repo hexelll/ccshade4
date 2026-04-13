@@ -82,6 +82,10 @@ function Renderer:render(image,palette)
     for i=1,self.sy do
         lines[i] = {"","",""}
         for j=1,self.sx do
+            if ( os.clock() > timeYield+5 ) then
+                sleep()
+                timeYield = os.clock()
+            end
             local t1 = os.clock()
             local v,u = (i-1)/((self.sy-1)),(j-1)/((self.sx-1))
             local combinator = self:getCombinator(u,v)
@@ -89,10 +93,6 @@ function Renderer:render(image,palette)
             lines[i][1] = lines[i][1]..combination[1]
             lines[i][2] = lines[i][2]..combination[2]
             lines[i][3] = lines[i][3]..combination[3]
-            if ( os.clock() > timeYield+5 ) then
-                sleep()
-                timeYield = os.clock()
-            end
         end
     end
     if self.debug then

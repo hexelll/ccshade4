@@ -162,6 +162,13 @@ function Color:duplicate()
     return Color:new(table.unpack(self))
 end
 
+function Color:toHash(size)
+    local r = round(self[1]*size)
+    local g = round(self[2]*size)
+    local b = round(self[3]*size)
+    return r*size*size+g*size+b
+end
+
 setmetatable(Color,{__call=function(self,...)
     return self:new(...)
 end})
