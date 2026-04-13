@@ -26,7 +26,7 @@ local function round(x)
 end
 
 function combinator:new(cacheSize)
-    cacheSize = cacheSize or 10
+    cacheSize = cacheSize and cacheSize or 10
     local o = {cacheSize=cacheSize,cache={}}
     setmetatable(o,{
         __index=function(_,k)
@@ -44,39 +44,38 @@ function combinator:onImageChange()
 
 end
 local function addToCache(self,palette,rawcol)
+    --[[
     col = Color:new(round(rawcol[1]*self.cacheSize)/self.cacheSize,round(rawcol[2]*self.cacheSize)/self.cacheSize,round(rawcol[3]*self.cacheSize)/self.cacheSize)
-    local hcol = col:toHex()
+    return col:findClosest(palette)
+    --[[]]
+    local hcol = rawcol:toHash(self.cacheSize)
     if self.cache[hcol] then
         return self.cache[hcol]
     end
-    local c = col:findClosest(palette)
+    local c = rawcol:findClosest(palette)
     self.cache[hcol] = c
     return c
+    --]]
 end
 function combinator:findCombination(u,v,image,palette,renderer)
     local combination = {}
     local step = 1/(renderer.sy-1)
+    local c = image:getPx(u,v)
     if round(v*(renderer.sy-1))%2 == 0 then
-        local col = addToCache(self,palette,image:getPx(u,v))
+        local col = addToCache(self,palette,c)
         local othercol = image:getPx(u,v+step*2/3)
-        if othercol then
-            othercol = addToCache(self,palette,othercol)
-        else
-            othercol = addToCache(self,palette,image:getPx(u,v))
-        end
+        othercol = othercol and othercol or c
+        othercol = addToCache(self,palette,othercol)
         combination[1] = '\143'
         combination[2] = hexTable[col]
         combination[3] = hexTable[othercol]
     else
         local col = image:getPx(u,v+step/3)
-        col = col and col or image:getPx(u,v)
+        col = col and col or c
         col = addToCache(self,palette,col)
         local othercol = image:getPx(u,v-step/3)
-        if othercol then
-            othercol = addToCache(self,palette,othercol)
-        else
-            othercol = addToCache(self,palette,image:getPx(u,v))
-        end
+        othercol = othercol and othercol or c
+        othercol = addToCache(self,palette,othercol)
         combination[1] = '\131'
         combination[3] = hexTable[col]
         combination[2] = hexTable[othercol]
