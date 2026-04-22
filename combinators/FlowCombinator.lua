@@ -26,7 +26,7 @@ local hexTable = {
     "f"
 }
 
-local combinator = {}
+local combinator = {name="FlowCombinator"}
 
 function combinator:new(args)
     local o = {}

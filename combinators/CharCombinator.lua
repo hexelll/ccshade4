@@ -1,5 +1,5 @@
 
-local CharCombinator = {}
+local CharCombinator = {name="CharCombinator"}
 
 local hexTable = {
     "0",
@@ -373,6 +373,8 @@ local function colorToIndex(c, size)
     return r * size * size + g * size + b
 end
 
+local lastt = os.clock()
+
 function CharCombinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
@@ -389,9 +391,17 @@ function CharCombinator:findCombination(u,v,image,palette)
         local best = {}   -- sorted by dif ascending
 
         for textColNum = 1, #combinationTable do
+            if (os.clock()-lastt) > 5 then
+                sleep()
+                lastt = os.clock()
+            end
             local row = combinationTable[textColNum]
 
             for backColNum = 1, #row do
+                if (os.clock()-lastt) > 5 then
+                    sleep()
+                    lastt = os.clock()
+                end
                 local cell = row[backColNum]
 
                 if cell then
@@ -456,7 +466,10 @@ function CharCombinator:findCombination(u,v,image,palette)
 
         local bestofbests = best[bestIdx]
         combination = {string.char(bestofbests[3]),hexTable[bestofbests[1]],hexTable[bestofbests[2]]}
-  
+        if (os.clock()-lastt) > 5 then
+            sleep()
+            lastt = os.clock()
+        end
         self.cacheCombination[index] = combination
         return combination
     end

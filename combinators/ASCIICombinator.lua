@@ -1,3 +1,15 @@
+--[[
+
+
+
+
+
+
+
+]]
+
+
+
 local Color = require "Color"
 local chars = {
     ' ','.','+','=','%','\7','\14','\15','#','@'
@@ -22,7 +34,7 @@ local hexTable = {
     "f"
 }
 
-local combinator = {}
+local combinator = {name="ASCIIcombinator"}
 
 function combinator:new()
     local o = {}

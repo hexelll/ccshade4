@@ -5,12 +5,10 @@ local ImageHandler = require "ImageHandler"
 function Renderer:new(params)
     local o = {}
     o.term = params.term and params.term or term
-    o.defaultcombinator = params.defaultCombinator and params.defaultCombinator or error("no default combinator given")
-    local defaultcombinators = {o.defaultcombinator}
-    o.combinators = params.combinators and params.combinators or defaultcombinators
+    o.combinators = params.combinators and params.combinators or error("no combinators given")
     local width,height = o.term.getSize()
     o.sx,o.sy = params.sx and params.sx or width, params.sy and params.Sy or height
-    o.mask = params.mask and params.mask
+    o.mask = params.mask
     o.px,o.py = params.px and params.px or 0, params.py and params.py or 0
     o.debug = params.debug
     if not o.mask then
@@ -18,7 +16,7 @@ function Renderer:new(params)
         for i=0,o.sx-1 do
             for j=0,o.sy-1 do
                 local u,v = i/(o.sx-1),j/(o.sy-1)
-                o.mask:setPx(u,v,defaultcombinators[1])
+                o.mask:setPx(u,v,o.combinators[1])
             end
         end
     end
@@ -89,7 +87,16 @@ function Renderer:render(image,palette)
             local t1 = os.clock()
             local v,u = (i-1)/((self.sy-1)),(j-1)/((self.sx-1))
             local combinator = self:getCombinator(u,v)
+            if not combinator then 
+                error("no combinator at uv ("..u..","..v..")") 
+            end
             local combination = combinator:findCombination(u,v,image,palette,self)
+            if not combination then
+                error("combination is nil at uv ("..u..","..v..") with "..combinator.name)
+            end
+            if not combination[1] or not combination[2] or not combination[2] then
+                error("error in combination at uv ("..u..","..v..") with "..combinator.name.." combination [1]:"..combination[1].." [2]:"..combination[2].." [3]:"..combination[3])
+            end
             lines[i][1] = lines[i][1]..combination[1]
             lines[i][2] = lines[i][2]..combination[2]
             lines[i][3] = lines[i][3]..combination[3]

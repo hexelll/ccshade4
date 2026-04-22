@@ -1,6 +1,6 @@
 local Color = require "Color"
 
-local combinator = {}
+local combinator = {name="SquarePixelCombinator"}
 
 local hexTable = {
     "0",

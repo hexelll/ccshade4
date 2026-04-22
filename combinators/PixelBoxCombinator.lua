@@ -2,7 +2,7 @@ local pixelbox = require "pixelbox_lite"
 
 local Color = require("Color")
 
-local combinator = {}
+local combinator = {name="PixelBoxCombinator"}
 
 local hexTable = {
     "0",
