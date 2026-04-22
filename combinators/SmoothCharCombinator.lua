@@ -308,10 +308,6 @@ local function vectorNorm(c)
     return math.sqrt(c[1]^2 + c[2]^2 + c[3]^2)
 end
 
-local function vectorInverse(c)
-    return { -c[1] , -c[2] , -c[3] }
-end
-
 local function vectorDotProduct(u,v)
     return u[1]*v[1] + u[2]*v[2] + u[3]*v[3]
 end
@@ -365,8 +361,15 @@ function SmoothCharCombinator:findCombination(u,v,image,palette)
         return cacheResult
     else    
 
-
-        local closestColor = searchedColor:findClosest(palette)
+        local closestColor = 1
+        local closestColorDistance = searchedColor:distance(palette[1])
+        for i=2,#palette do
+            local dist = searchedColor:distance(palette[i])
+            if dist < closestColorDistance then
+                closestColorDistance = dist
+                closestColor = i
+            end
+        end
 
         -- vector defining the line conecting closestColor and searchedColor
         local u = vertorSub(palette[closestColor],searchedColor)
@@ -397,12 +400,12 @@ function SmoothCharCombinator:findCombination(u,v,image,palette)
                 end
             end
             if ( not secondColor) then
-                local mindist = math.huge
+                minDistance = math.huge
                 for i=1,#palette do
                     if (i ~= closestColor) then
                         local dist = searchedColor:distance(palette[i])
-                        if dist < mindist then
-                            mindist = dist
+                        if dist < minDistance then
+                            minDistance = dist
                             secondColor = i
                         end
                     end
@@ -410,8 +413,7 @@ function SmoothCharCombinator:findCombination(u,v,image,palette)
             end
 
             -- ideal coeficient
-            local totalDist = palette[secondColor]:distance(searchedColor) + palette[closestColor]:distance(searchedColor)
-            local idealCoef = (palette[closestColor]:distance(searchedColor)/totalDist)
+            local idealCoef = (closestColorDistance/minDistance+closestColorDistance)
 
             -- search for char with coef closest to ideal coeficient (with possible inversion)
             local bestChar = 1
