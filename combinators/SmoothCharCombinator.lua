@@ -305,11 +305,63 @@ local function vertorSub(u,v)
 end
 
 local function vectorNorm(c)
-    return math.sqrt(c[1]^2 + c[2]^2 + c[3]^2)
+    return math.sqrt(c[1]*c[1] + c[2]*c[2] + c[3]*c[3])
 end
 
 local function vectorDotProduct(u,v)
     return u[1]*v[1] + u[2]*v[2] + u[3]*v[3]
+end
+
+local function findBestCharRandom(self,idealCoef)
+    local bestChar = 1
+    local minDif = math.huge
+    local inv = false
+    local closeChars = {}
+    for i=1, #self.usedCharsCoef do
+        local coef = self.usedCharsCoef[i]
+        local dist1 = math.abs(idealCoef-coef)
+        if (dist1 < minDif) then
+            minDif = dist1
+            bestChar = i
+            inv = false
+        end
+        if (dist1 < self.randomDist) then
+            table.insert(closeChars,{i,false})
+        end
+        local dist2 = math.abs(1-idealCoef-coef)
+        if (dist2 < minDif) then
+            minDif = dist2
+            bestChar = i
+            inv = true
+        end
+        if (dist2 < self.randomDist) then
+            table.insert(closeChars,{i,true})
+        end
+    end
+    table.insert(closeChars,{bestChar,inv})
+    return closeChars[ math.random( #closeChars ) ]
+end
+
+local function findBestChar(self,idealCoef)
+    local bestChar = 1
+    local minDif = math.huge
+    local inv = false
+    for i=1, #self.usedCharsCoef do
+        local coef = self.usedCharsCoef[i]
+        local dist1 = math.abs(idealCoef-coef)
+        if (dist1 < minDif) then
+            minDif = dist1
+            bestChar = i
+            inv = false
+        end
+        local dist2 = math.abs(1-idealCoef-coef)
+        if (dist2 < minDif) then
+            minDif = dist2
+            bestChar = i
+            inv = true
+        end
+    end
+    return {bestChar,inv}
 end
 
 function SmoothCharCombinator:new(args)
@@ -330,9 +382,15 @@ function SmoothCharCombinator:new(args)
         table.insert( o.usedCharsCoef , charCoefs[charNum+1] )
     end
 
+    o.useCache = args.useCache == nil and true or args.useCache
+    o.useRandom = args.useRandom 
+    o.randomDist = args.randomDist and args.randomDist or 0.05
+    
+    o.findBestCharFunc = o.useRandom and findBestCharRandom or findBestChar
+
     o.cache = {}
 
-    o.distConsideredEqual = args.distConsideredEqual and distConsideredEqual or 0
+    o.distConsideredEqual = args.distConsideredEqual and args.distConsideredEqual or 0
 
     setmetatable(o,{
         __index=function(_,k)
@@ -354,9 +412,10 @@ end
 function SmoothCharCombinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
-    local index = colorToIndex(searchedColor,self.cacheSize)
-
-    local cacheResult = self.cache[index]
+    --if (self.useCache) then
+        local index = colorToIndex(searchedColor,self.cacheSize)
+        local cacheResult = self.cache[index]
+    --end
     if ( cacheResult ) then
         return cacheResult
     else    
@@ -399,7 +458,7 @@ function SmoothCharCombinator:findCombination(u,v,image,palette)
                     end
                 end
             end
-            if ( not secondColor) then
+            if ( secondColor == closestColor ) then
                 minDistance = math.huge
                 for i=1,#palette do
                     if (i ~= closestColor) then
@@ -413,23 +472,19 @@ function SmoothCharCombinator:findCombination(u,v,image,palette)
             end
 
             -- ideal coeficient
-            local idealCoef = (closestColorDistance/minDistance+closestColorDistance)
+            local idealCoef = (closestColorDistance/(minDistance+closestColorDistance))
+  
+            local result = self:findBestCharFunc(idealCoef)
 
-            -- search for char with coef closest to ideal coeficient (with possible inversion)
-            local bestChar = 1
-            local minDif = math.huge
-            for i=1, #self.usedCharsCoef do
-                local coef = self.usedCharsCoef[i]
-                local dist = math.abs(idealCoef-coef)
-                if (dist < minDif) then
-                    minDif = dist
-                    bestChar = i
-                end
+            if (result[2])then
+                combination = {string.char(self.usedChars[result[1]]),hexTable[closestColor],hexTable[secondColor]}
+            else
+                combination = {string.char(self.usedChars[result[1]]),hexTable[secondColor],hexTable[closestColor]}
             end
-
-            combination = {string.char(self.usedChars[bestChar]),hexTable[secondColor],hexTable[closestColor]}
         end
-        self.cache[index] = combination
+        if (self.useCache) then
+            self.cache[index] = combination
+        end
         return combination
     end
 end
