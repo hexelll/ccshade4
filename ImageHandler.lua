@@ -71,6 +71,40 @@ function ImageHandler:resize(newSx, newSy)
     return self
 end
 
+function ImageHandler:resizeMean(newSx,newSy)
+    local newData = {}
+    local dx = round(self.sx/newSx)
+    local dy = round(self.sy/newSy)
+    print(newSx,self.sx,dx,newSy,self.sy,dy)
+    for i=0,self.sx-1 do
+        for j=0,self.sy-1 do
+            local cs = Color()
+            local k = 0
+            for di=0,dx do
+                for dj=0,dy do
+                    local u,v = (i+di)/(self.sx-1),(j+dj)/(self.sy-1)
+                    local px = self:getPx(u,v)
+                    if px then
+                        cs[1] = cs[1] + px[1]
+                        cs[2] = cs[2] + px[2]
+                        cs[3] = cs[3] + px[3]
+                        k=k+1
+                    end
+                end
+            end
+            cs[1] = cs[1]/k
+            cs[2] = cs[2]/k
+            cs[3] = cs[3]/k
+            local u,v = (i)/(self.sx-1),(j)/(self.sy-1)
+            newData[uvToIndex(newSx,newSy,u,v)] = cs
+        end
+    end
+    self.data = newData
+    self.sx = newSx
+    self.sy = newSy
+    return self
+end
+
 function ImageHandler:getPx(u,v)
     local index = uvToIndex(self.sx,self.sy,u,v)
     return self.data[index]
@@ -103,7 +137,7 @@ function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
     self:findUniqueColors()
     distanceFunction = distanceFunction and distanceFunction or Color.distance
     maxIteration=maxIteration and maxIteration or 50
-    eps=eps and eps or 0.0001
+    eps=eps and eps or 0.00001
     paletteSize = paletteSize and paletteSize or 16
     local palette = {}
     for i=1,paletteSize do
@@ -191,6 +225,28 @@ function ImageHandler:process(shader)
         print("end process:",os.clock()-t)
     end
     return self
+end
+
+function ImageHandler:unlinearize()
+    return self:process(function(s,u,v)
+        local px = s:getPx(u,v)
+        local col = Color()
+        for i=1,3 do
+            col[i] = px[i] <= 0.0031308 and 12.92*px[i] or 1.055*(px[i]^(1/2.4))-0.055
+        end
+        return col
+    end)
+end
+
+function ImageHandler:linearize()
+    return self:process(function(s,u,v)
+        local px = s:getPx(u,v)
+        local col = Color()
+        for i=1,3 do
+            col[i] = px[i] <= 0.04045 and px[i]/12.92 or ((px[i]+0.055)/1.055)^2.4
+        end
+        return col
+    end)
 end
 
 function ImageHandler:map(shader,sx,sy)

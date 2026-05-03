@@ -85,7 +85,8 @@ function Color:new(r,g,b,a)
 end
 
 function Color:distance(color)
-    return (self[1]-color[1])^2+(self[2]-color[2])^2+(self[3]-color[3])^2
+    local s1,s2,s3,c1,c2,c3 = self[1],self[2],self[3],color[1],color[2],color[3]
+    return (s1-c1)*(s1-c1)+(s2-c2)*(s2-c2)+(s3-c3)*(s3-c3)
 end
 
 local function interp(a,b,k)
@@ -96,11 +97,12 @@ function Color:mix(color,k)
     return Color:new(interp(self[1],color[1],k),interp(self[2],color[2],k),interp(self[3],color[3],k),interp(self[4],color[4],k))
 end
 
-function Color:findClosest(palette,distanceFunction)
+function Color:findClosest(palette,distanceFunction,palettesize)
+    palettesize = palettesize and palettesize or #palette
     distanceFunction = distanceFunction and distanceFunction or self.distance
     local mindist = distanceFunction(self,palette[1])
     local mini = 1
-    for i=2,#palette do
+    for i=2,palettesize do
         local dist = distanceFunction(self,palette[i])
         if dist < mindist then
             mindist = dist
@@ -163,9 +165,9 @@ function Color:duplicate()
 end
 
 function Color:toHash(size)
-    local r = round(self[1]*size)
-    local g = round(self[2]*size)
-    local b = round(self[3]*size)
+    local r = math.floor(self[1]*(size-1)+0.5)
+    local g = math.floor(self[2]*(size-1)+0.5)
+    local b = math.floor(self[3]*(size-1)+0.5)
     return r*size*size+g*size+b
 end
 

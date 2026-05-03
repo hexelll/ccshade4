@@ -29,10 +29,11 @@ local hexTable = {
 local combinator = {name="FlowCombinator"}
 
 function combinator:new(args)
+    args = args and args or {}
     local o = {}
     o.invert = args.invert
     o.limit = args.limit and args.limit or 0.2
-    o.defaultchar = args.defaultchar and args.defaultchar or '`'
+    o.defaultchar = args.defaultchar and args.defaultchar or '\7'
     setmetatable(o,{__index=self})
     return o
 end
