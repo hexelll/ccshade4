@@ -281,6 +281,7 @@ local charCoefs = {
 }
 
 function RoughCharCombinator:new(args)
+    args = args and args or {}
     --[[ args {
         cacheSize = int
         usedChars = {int} array of char number

@@ -339,6 +339,7 @@ local function toLinear(c)
 end
 
 function combinator:new(args)
+    args = args and args or {}
     local o = {}
 
     o.cacheSize = args.cacheSize and args.cacheSize or 100

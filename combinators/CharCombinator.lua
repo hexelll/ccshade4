@@ -280,6 +280,7 @@ local charCoefs = {
 }
 
 function CharCombinator:new(args)
+    args = args and args or {}
     --[[ args {
         nbSearched = int
         cacheSize = int

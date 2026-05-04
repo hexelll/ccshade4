@@ -38,6 +38,7 @@ local function colorToIndex(c, size)
 end
 
 function VerboseCombinator:new(args)
+    args = args and args or ()
     --[[ args {
         textColor = Color or number or nil or function(pixelColor,palette)
         backColor = Color or number or nil or function(pixelColor,palette)

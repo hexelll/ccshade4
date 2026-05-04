@@ -11,13 +11,13 @@ local screen = Renderer:new{
     term=mon,
     combinators={combinator}
 }
-local image = ImageHandler:new(screen.sx,screen.sy):process(function(self,u,v)return Color(u,v)end):linearize()
---local image = MediaParser:open("images/gar.qoi"):resize(screen.sx,math.floor(screen.sy*3/2+0.5))--:linearize()
-local palette = image:findPalette(nil,nil,0.001,50)
+--local image = ImageHandler:new(screen.sx,screen.sy):process(function(self,u,v)return Color(u,v)end):linearize()
+local image = MediaParser:open("images/gar.qoi"):resize(screen.sx,math.floor(screen.sy*3/2+0.5))
+
 for i=1,N do
     local tstart = os.clock()
-    
-    combinator.cache = {}
+    local palette = image:findPalette(nil,nil,0.001,50)
+    combinator:onPaletteChange(palette)
     screen:render(image,palette).display()
     meanT = meanT + os.clock()-tstart
 end

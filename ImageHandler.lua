@@ -241,11 +241,7 @@ end
 function ImageHandler:linearize()
     return self:process(function(s,u,v)
         local px = s:getPx(u,v)
-        local col = Color()
-        for i=1,3 do
-            col[i] = px[i] <= 0.04045 and px[i]/12.92 or ((px[i]+0.055)/1.055)^2.4
-        end
-        return col
+        return px:linearize()
     end)
 end
 

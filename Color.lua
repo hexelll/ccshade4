@@ -164,6 +164,14 @@ function Color:duplicate()
     return Color:new(table.unpack(self))
 end
 
+function Color:linearize()
+    local col = Color()
+    for i=1,3 do
+        col[i] = self[i] <= 0.04045 and self[i]/12.92 or ((self[i]+0.055)/1.055)^2.4
+    end
+    return col
+end
+
 function Color:toHash(size)
     local r = math.floor(self[1]*(size-1)+0.5)
     local g = math.floor(self[2]*(size-1)+0.5)
