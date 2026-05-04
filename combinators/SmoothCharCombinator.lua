@@ -1,6 +1,6 @@
 local Color = require("Color")
 
-local SmoothCharCombinator = {}
+local SmoothCharCombinator = {name="SmoothCharCombinator"}
 
 local hexTable = {
     "0",
