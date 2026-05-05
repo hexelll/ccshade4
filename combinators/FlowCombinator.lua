@@ -7,24 +7,7 @@ local patterns = {
     {0.5,0.5,'/'}
 }
 
-local hexTable = {
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f"
-}
+local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
 
 local combinator = {name="FlowCombinator"}
 
