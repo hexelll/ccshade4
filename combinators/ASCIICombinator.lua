@@ -1,6 +1,6 @@
 --[[
 
-    this is a combinator mean to achieve a classic retro ascii look
+    this is a combinator meant to achieve a classic retro ascii look
     it works by using the lightness of the pixel as an index into a table of characters
 
     ASCIICombinator: {
@@ -19,24 +19,7 @@ local chars = {
     ' ','.','*','+','=','a','@'
 }
 
-local hexTable = {
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f"
-}
+local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
 
 local combinator = {name="ASCIIcombinator"}
 
