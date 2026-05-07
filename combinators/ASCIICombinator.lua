@@ -4,6 +4,7 @@
     it works by using the lightness of the pixel as an index into a table of characters
 
     ASCIICombinator: {
+        name: string,
         new: function,
         onPaletteChange: function,
         onImageChange: function,
@@ -31,9 +32,9 @@ local combinator = {name="ASCIIcombinator"}
     function new(
         self: ASCIICombinator,
         args:{
-            cacheSize: ?number,
-            chars: ?[char],
-            invert: ?boolean
+            cacheSize: ?number | 100,
+            chars: ?[char] | chars,
+            invert: ?boolean | false
         }
     ) -> ASCIICombinator
 
@@ -114,9 +115,11 @@ function combinator:findCombination(u,v,image,palette)
     if self.invert then
         k = 1-k
     end
-    col[1] = math.min(px[1]*(1+k),1)
-    col[2] = math.min(px[2]*(1+k),1)
-    col[3] = math.min(px[3]*(1+k),1)
+    
+    local c = 1
+    col[1] = math.min(px[1]*c,1)
+    col[2] = math.min(px[2]*c,1)
+    col[3] = math.min(px[3]*c,1)
     
     local combination = {self.chars[1+round(k*(#chars-1))],hexTable[col:findClosest(palette)],hexTable[Color():findClosest(palette)]}
     if self.invert then

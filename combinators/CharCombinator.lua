@@ -4,7 +4,8 @@
     it works by searching for all combinations of background color,text color and character,
     it is rather slow and not meant for real-time use but quality of render
 
-    ASCIICombinator: {
+    CharCombinator: {
+        name: string,
         new: function,
         onPaletteChange: function,
         onImageChange: function,
@@ -28,11 +29,11 @@ local charCoefs = {0 ,19/54 ,25/54 ,21/54 ,13/54 ,19/54 ,18/54 ,12/54 ,36/54 ,0 
     function new(
         self: CharCombinator,
         args:{
-            cacheSize: ?number,
-            chars: ?[char],
-            invert: ?boolean
+            cacheSize: ?number | 100,
+            nbSearched: ?number | 1,
+            usedChars: ?[number] | [1..255]
         }
-    ) -> ASCIICombinator
+    ) -> CharCombinator
 
 ]]
 function CharCombinator:new(args)
@@ -57,7 +58,7 @@ function CharCombinator:new(args)
         table.insert( o.usedCharsCoef , charCoefs[charNum+1] )
     end
 
-    o.cacheCombination = {}
+    o.cache = {}
 
     setmetatable(o,{
         __index=function(_,k)
@@ -68,8 +69,18 @@ function CharCombinator:new(args)
     return o
 end
 
+--[[
 
-function CharCombinator:onPaletteChange(palette)
+    this function is called when the palette is different from last Renderer.render call
+
+    onPaletteChange(
+        self: CharCombinator,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function CharCombinator:onPaletteChange(palette,renderer)
 
     local combinationTable = {}
     for textColNum=1,#palette do
@@ -105,10 +116,22 @@ function CharCombinator:onPaletteChange(palette)
     end
     self.combinationTable = combinationTable
 
-    self.cacheCombination = {}
+    self.cache = {}
 end
 
-function CharCombinator:onImageChange(image)
+--[[
+
+    this function is called by Renderer when the image is different from last Renderer.render call
+
+    onImageChange(
+        self: CharCombinator,
+        image: ImageHandler,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function CharCombinator:onImageChange(image,palette,renderer)
 
 end
 
@@ -116,22 +139,29 @@ local function round(x)
     return math.floor(x+0.5)
 end
 
-local function colorToIndex(c, size)
-    local r = round(c[1] * (size - 1))
-    local g = round(c[2] * (size - 1))
-    local b = round(c[3] * (size - 1))
-
-    return r * size * size + g * size + b
-end
-
 local lastt = os.clock()
 
+--[[
+
+    this function is used in Renderer to turn image information into actual characters displayed on the monitor
+    it returns an array of size 3 in this format : 
+    [character to display, palette index in hex format for the text color, palette index in hex format for the background color]
+
+    findCombination(
+        self: CharCombinator,
+        u: number, 
+        v: number, 
+        image: ImageHandler, 
+        palette: [Color]
+    ) -> [char, char, char]
+
+]]
 function CharCombinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
-    local index = colorToIndex(searchedColor,self.cacheSize)
+    local index = searchedColor:toHash(self.cacheSize)
 
-    local cacheResult = self.cacheCombination[index]
+    local cacheResult = self.cache[index]
     if ( cacheResult ) then
         return cacheResult
     else    
@@ -221,7 +251,7 @@ function CharCombinator:findCombination(u,v,image,palette)
             sleep()
             lastt = os.clock()
         end
-        self.cacheCombination[index] = combination
+        self.cache[index] = combination
         return combination
     end
 end

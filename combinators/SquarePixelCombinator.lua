@@ -1,3 +1,21 @@
+--[[
+
+    This is a combinator meant to have square pixels, this means that the size of the image you pass
+    to Renderer.render should be 3/2 times larger than the screen resolution, this can be done with
+    image:resize(sx,math.floor(sy*3/2)) for the smallest image possible.
+    It is fast and suitable for realtime use, but it lacks in terms of accuracy on big screens compared to
+    char combinators.
+
+    SquarePixelCombinator: {
+        name: string,
+        new: function,
+        onPaletteChange: function,
+        onImageChange: function,
+        findCombination: function
+    }
+
+]]
+
 local Color = require "Color"
 
 local combinator = {name="SquarePixelCombinator"}
@@ -8,8 +26,22 @@ local function round(x)
     return math.floor(x+0.5)
 end
 
-function combinator:new(cacheSize)
-    cacheSize = cacheSize and cacheSize or 16
+--[[
+
+    this function creates a new CharCombinator instance, 
+    this should generaly only be done once per program
+
+    function new(
+        self: SquarePixelCombinator,
+        args:{
+            cacheSize: ?number | 100
+        }
+    ) -> SquarePixelCombinator
+
+]]
+function combinator:new(args)
+    args = args and args or {}
+    cacheSize = args.cacheSize and args.cacheSize or 16
     local o = {cacheSize=cacheSize,cache={}}
     setmetatable(o,{
         __index=function(_,k)
@@ -19,11 +51,34 @@ function combinator:new(cacheSize)
     return o
 end
 
-function combinator:onPaletteChange()
+--[[
+
+    this function is called when the palette is different from last Renderer.render call
+
+    onPaletteChange(
+        self: SquarePixelCombinator,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function combinator:onPaletteChange(palette,renderer)
     self.cache = {}
 end
 
-function combinator:onImageChange()
+--[[
+
+    this function is called by Renderer when the image is different from last Renderer.render call
+
+    onImageChange(
+        self: SquarePixelCombinator,
+        image: ImageHandler,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function combinator:onImageChange(image,palette,renderer)
 
 end
 local function addToCache(self,palette,rawcol)
@@ -35,6 +90,22 @@ local function addToCache(self,palette,rawcol)
     self.cache[hcol] = c
     return c
 end
+
+--[[
+
+    this function is used in Renderer to turn image information into actual characters displayed on the monitor
+    it returns an array of size 3 in this format : 
+    [character to display, palette index in hex format for the text color, palette index in hex format for the background color]
+
+    findCombination(
+        self: SquarePixelCombinator,
+        u: number, 
+        v: number, 
+        image: ImageHandler, 
+        palette: [Color]
+    ) -> [char, char, char]
+
+]]
 function combinator:findCombination(u,v,image,palette,renderer)
     local combination = {}
     local step = 1/(renderer.sy-1)

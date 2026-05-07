@@ -64,10 +64,20 @@ function Color:new(r,g,b,a)
             return "("..(round(s[1]*100)/100)..","..(round(s[2]*100)/100)..","..(round(s[3]*100)/100)..","..(round(s[4]*100)/100)..")"
         end,
         __sub=function(a,b)
-            if type(a) ~= "table" or type(b) ~= "table" then
-                error("both values must be colors")
+            if type(a) == "table" and type(b) == "number" then
+                return Color:new(a[1]-b,a[2]-b,a[3]-b,a[4])
             end
-            return a:distance(b)
+            if type(a) == "table" and type(b) == "table" then
+                return Color:new(a[1]-b[1],a[2]-b[2],a[3]-b[3])
+            end
+        end,
+        __add=function(a,b)
+            if type(a) == "table" and type(b) == "number" then
+                return Color:new(a[1]+b,a[2]+b,a[3]+b,a[4])
+            end
+            if type(a) == "table" and type(b) == "table" then
+                return Color:new(a[1]+b[1],a[2]+b[2],a[3]+b[3])
+            end
         end,
         __mul=function(a,b)
             if type(a) == "number" and type(b) == "table" then
@@ -75,6 +85,9 @@ function Color:new(r,g,b,a)
             end
             if type(a) == "table" and type(b) == "number" then
                 return Color:new(a[1]*b,a[2]*b,a[3]*b,a[4])
+            end
+            if type(a) == "table" and type(b) == "table" then
+                return Color:new(a[1]*b[1],a[2]*b[2],a[3]*b[3],a[4]*b[4])
             end
         end,
         __eq=function(a,b)
