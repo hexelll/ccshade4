@@ -7,7 +7,7 @@ function Renderer:new(params)
     o.term = params.term and params.term or term
     o.combinators = params.combinators and params.combinators or error("no combinators given")
     local width,height = o.term.getSize()
-    o.sx,o.sy = params.sx and params.sx or width, params.sy and params.Sy or height
+    o.sx,o.sy = params.sx and params.sx or width, params.sy and params.sy or height
     o.mask = params.mask
     o.px,o.py = params.px and params.px or 0, params.py and params.py or 0
     o.debug = params.debug
