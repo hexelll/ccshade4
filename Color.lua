@@ -185,6 +185,14 @@ function Color:linearize()
     return col
 end
 
+function Color:gamma2()
+    local col = Color()
+    col[1] = col[1]^2.2
+    col[2] = col[2]^2.2
+    col[3] = col[3]^2.2
+    return col
+end
+
 function Color:toHash(size)
     local r = math.floor(self[1]*(size-1)+0.5)
     local g = math.floor(self[2]*(size-1)+0.5)
