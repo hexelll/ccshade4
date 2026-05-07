@@ -45,25 +45,6 @@ local function distSegmentColor(segment,color)
     return vectorNorm(vectorSub(color, P)), t
 end
 
-local function colorToIndex(c, size)
-    local r = round(c[1] * (size - 1))
-    local g = round(c[2] * (size - 1))
-    local b = round(c[3] * (size - 1))
-
-    return r * size * size + g * size + b
-end
-
-local function toLinear(c)
-    local function f(x)
-        if x <= 0.04045 then
-            return x / 12.92
-        else
-            return ((x + 0.055)/1.055)^2.4
-        end
-    end
-    return {f(c[1]), f(c[2]), f(c[3])}
-end
-
 function combinator:new(args)
     args = args and args or {}
     local o = {}
@@ -105,9 +86,9 @@ function combinator:onPaletteChange(palette)
 
     local doneColors = {}
     for i,color1 in ipairs(palette) do
-        local linearC1 = toLinear(color1)
+        local linearC1 = color1:linearize()
         for j,color2 in ipairs(palette) do
-            local linearC2 = toLinear(color2)
+            local linearC2 = color2:linearize()
             if ( not doneColors[j] and i~=j) then
                 local direction = vectorSub(linearC2,linearC1)
                 local directionNorm = vectorNorm(direction)
@@ -128,13 +109,13 @@ end
 function combinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
-    local index = colorToIndex(searchedColor,self.cacheSize)
+    local index = searchedColor:toHash(self.cacheSize)
     local cacheResult = self.cache[index]
     if ( cacheResult ) then
         return cacheResult
     else    
 
-        local linearSC = toLinear(searchedColor)
+        local linearSC = searchedColor:linearize()
 
         -- find colors
         local bestSegment

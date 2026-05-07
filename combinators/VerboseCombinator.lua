@@ -12,14 +12,6 @@ local function clamp(x)
     return math.min(math.max(x,0),1)
 end
 
-local function colorToIndex(c, size)
-    local r = round(c[1] * (size - 1))
-    local g = round(c[2] * (size - 1))
-    local b = round(c[3] * (size - 1))
-
-    return r * size * size + g * size + b
-end
-
 function VerboseCombinator:new(args)
     args = args and args or {}
     --[[ args {
@@ -117,7 +109,7 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
 
     local indexT,indexB
 
-    local index = colorToIndex(pixelColor,self.cacheSize)
+    local index = pixelColor:toHash(self.cacheSize)
 
     local cacheResult = self.cache[index]
     if ( cacheResult ) then

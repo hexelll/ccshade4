@@ -9,14 +9,6 @@ local function round(x)
     return math.floor(x+0.5)
 end
 
-local function colorToIndex(c, size)
-    local r = round(c[1] * (size - 1))
-    local g = round(c[2] * (size - 1))
-    local b = round(c[3] * (size - 1))
-
-    return r * size * size + g * size + b
-end
-
 function SimpleCombinator:new(args)
     --[[ args {
         cacheSize = int
@@ -46,7 +38,7 @@ end
 function SimpleCombinator:findCombination(u,v,image,palette)
     local px = image:getPx(u,v)
 
-    local index = colorToIndex(px,self.cacheSize)
+    local index = px:toHash(self.cacheSize)
 
     local cacheResult = self.cache[index]
     if ( cacheResult ) then
