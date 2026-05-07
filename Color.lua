@@ -186,11 +186,7 @@ function Color:linearize()
 end
 
 function Color:gamma2()
-    local col = Color()
-    col[1] = self[1]^2.2
-    col[2] = self[2]^2.2
-    col[3] = self[3]^2.2
-    return col
+    return Color(self[1]^2.2,self[2]^2.2,self[3]^2.2)
 end
 
 function Color:toHash(size)
