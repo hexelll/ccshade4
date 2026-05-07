@@ -187,9 +187,9 @@ end
 
 function Color:gamma2()
     local col = Color()
-    col[1] = col[1]^2.2
-    col[2] = col[2]^2.2
-    col[3] = col[3]^2.2
+    col[1] = self[1]^2.2
+    col[2] = self[2]^2.2
+    col[3] = self[3]^2.2
     return col
 end
 
