@@ -42,13 +42,16 @@ end
         self: VerboseCombinator,
         args:{
             cacheSize:          ?number                 | 100,
-            textColor:          Color/number/function               // if given Color : will use the closest color in the palette
+            textColor:          Color/number/function               // if given Color : constantly will use the closest color in the palette from given Color
                                                                     // if given number : uses the number as coeficient to brighten/darken the image color, then uses closest color in palette to that
                                                                     // if given function : uses call of function with args (pixelColor,palette,image,renderer,u,v) as index to use in the palette, for every texel
-            
+                                                                    // if nil : uses findClosest from pixelColor (same as given number 1)
+
             backColor:          Color/number/function               // exact same as textColor
-            usedColors:         [Color/String]                      // array of Colors to be associated to String to display (can be given HEX codes as String too), Nth Color is associated with Nth String in usedStrings
-            usedStrings:        [String]                            // array of String to be associated to Colors to disply, Nth String is associated with Nth Color in usedColors
+            
+            usedColors:         [Color/String]          | {"FF0000","00FF00","0000FF","FFFFFF","000000"}    // array of Colors to be associated to String to display (can be given HEX codes as Strings too), Nth Color is associated with Nth String in usedStrings
+            usedStrings:        [String]                | {"red","green","blue","white","black"}            // array of String to be associated to Colors to display, Nth String is associated with Nth Color in usedColors
+            
             stringSeparator:    ?String                 | " "       // the string that will seperate every string in used usedStrings (to avoid repeating the separator at the end of every String)
             shiftToEdges:       ?bool                   | false     // if the text will restart from the begining on edges (color change)
             edgeSeparator:      ?char/String            | ""        // the char/ 1 length String that will appear on edges (color change)
@@ -176,13 +179,12 @@ end
 
 ]]
 function combinator:findCombination(u,v,image,palette,renderer)
-
     local pixelColor = image:getPx(u,v)
 
     local indexT,indexB
 
+    -- find text and back color
     local index = pixelColor:toHash(self.cacheSize)
-
     local cacheResult = self.cache[index]
     if ( cacheResult ) then
         indexT,indexB = table.unpack(cacheResult)
@@ -209,8 +211,8 @@ function combinator:findCombination(u,v,image,palette,renderer)
         self.cache[index] = {indexT,indexB}
     end
 
+    -- find char
     local usedStringIndex = self.usedColors and pixelColor:findClosest(self.usedColors) or nil ;
-    
     local char = ' ';
     if ( usedStringIndex ) then 
         local usedString = self.usedStrings[usedStringIndex]

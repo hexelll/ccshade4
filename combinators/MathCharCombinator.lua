@@ -75,7 +75,7 @@ end
     function new(
         self: MathCharCombinator,
         args:{
-            cacheSize: ?number | 100,
+            cacheSize: ?number   | 100,
             usedChars: ?[number] | [0-255], // All characters to be used by the combinator, identified by their number
         }
     ) -> MathCharCombinator
@@ -127,8 +127,8 @@ end
 function combinator:onPaletteChange(palette)
     self.cache = {}
 
+    -- pre-compile segments between every color in palette
     self.preCompiledSegments = {}
-
     local doneColors = {}
     for i,color1 in ipairs(palette) do
         local linearC1 = color1:gamma2()
