@@ -1,9 +1,29 @@
+--[[
+
+    This combinator will write text on screen depending on the desired color of the texel.
+    This can be used to spell out colors where they appear or describe elements on the image.
+    This is not meant to create high fidelity renders of images, but it is very funny.
+
+    VerboseCombinator: {
+        name: string,
+        new: function,
+        onPaletteChange: function,
+        onImageChange: function,
+        findCombination: function
+    }
+
+]]
+
 local Color = require("Color")
 
-local VerboseCombinator = {name="VerboseCombinator"}
+local combinator = {name="VerboseCombinator"}
 
 local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
 
+
+--[[
+    Math Utils
+]]
 local function round(x)
     return math.floor(x+0.5)
 end
@@ -12,18 +32,33 @@ local function clamp(x)
     return math.min(math.max(x,0),1)
 end
 
-function VerboseCombinator:new(args)
+
+--[[
+
+    this function creates a new VerboseCombinator instance, 
+    this should generaly only be done once per program
+
+    function new(
+        self: VerboseCombinator,
+        args:{
+            cacheSize:          ?number                 | 100,
+            textColor:          Color/number/function               // if given Color : will use the closest color in the palette
+                                                                    // if given number : uses the number as coeficient to brighten/darken the image color, then uses closest color in palette to that
+                                                                    // if given function : uses call of function with args (pixelColor,palette,image,renderer,u,v) as index to use in the palette, for every texel
+            
+            backColor:          Color/number/function               // exact same as textColor
+            usedColors:         [Color/String]                      // array of Colors to be associated to String to display (can be given HEX codes as String too), Nth Color is associated with Nth String in usedStrings
+            usedStrings:        [String]                            // array of String to be associated to Colors to disply, Nth String is associated with Nth Color in usedColors
+            stringSeparator:    ?String                 | " "       // the string that will seperate every string in used usedStrings (to avoid repeating the separator at the end of every String)
+            shiftToEdges:       ?bool                   | false     // if the text will restart from the begining on edges (color change)
+            edgeSeparator:      ?char/String            | ""        // the char/ 1 length String that will appear on edges (color change)
+            cascadeRatio:       ?number                 | 0         // by how much the text will be shifted by every line (prevents ugly vertical alignements)
+        }
+    ) -> VerboseCombinator
+
+]]
+function combinator:new(args)
     args = args and args or {}
-    --[[ args {
-        textColor = Color or number or nil or function(pixelColor,palette)
-        backColor = Color or number or nil or function(pixelColor,palette)
-        usedColors = {Color or string}
-        usedStrings = {string}
-        stringSeparator = string
-        cacheSize = int
-        cascadeRatio = int
-        shiftToEdges = 
-    } ]]
         
     local o = {}
 
@@ -55,20 +90,20 @@ function VerboseCombinator:new(args)
         o.backColorShader = args.backColor
     end
 
-    o.usedColors = args.usedColors and args.usedColors or nil
+    o.usedColors = args.usedColors and args.usedColors or {"FF0000","00FF00","0000FF","FFFFFF","000000"}
     for i, color in ipairs(o.usedColors) do
         if (type(color)=="string") then
             o.usedColors[i] = Color.fromHex(color)
         end
     end
 
-    o.usedStrings = args.usedStrings and args.usedStrings or {}
+    o.usedStrings = args.usedStrings and args.usedStrings or {"red","green","blue","white","black"}
     if (args.stringSeparator) then
         for i, string in ipairs(o.usedStrings) do
             o.usedStrings[i] = string..args.stringSeparator 
         end
     end
-    o.stringSeparator = args.stringSeparator and args.stringSeparator or ""
+    o.stringSeparator = args.stringSeparator and args.stringSeparator or " "
 
     o.shiftToEdges = args.shiftToEdges
     if (o.shiftToEdges) then
@@ -91,19 +126,56 @@ function VerboseCombinator:new(args)
     return o
 end
 
-function VerboseCombinator:onPaletteChange(palette)
+--[[
+
+    this function is called when the palette is different from last Renderer.render call
+
+    onPaletteChange(
+        self: VerboseCombinator,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function combinator:onPaletteChange(palette)
     self.usedTextColorIndex = self.desiredTextColor and self.desiredTextColor:findClosest(palette) or nil
     self.usedBackColorIndex = self.desiredBackColor and self.desiredBackColor:findClosest(palette) or nil
 
     self.cache = {}
 end
 
-function VerboseCombinator:onImageChange(image)
+--[[
+
+    this function is called by Renderer when the image is different from last Renderer.render call
+
+    onImageChange(
+        self: VerboseCombinator,
+        image: ImageHandler,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function combinator:onImageChange(image)
 
 end
 
+--[[
 
-function VerboseCombinator:findCombination(u,v,image,palette,renderer)
+    this function is used in Renderer to turn image information into actual characters displayed on the monitor
+    it returns an array of size 3 in this format : 
+    [character to display, palette index in hex format for the text color, palette index in hex format for the background color]
+
+    findCombination(
+        self: VerboseCombinator,
+        u: number, 
+        v: number, 
+        image: ImageHandler, 
+        palette: [Color]
+    ) -> [char, char, char]
+
+]]
+function combinator:findCombination(u,v,image,palette,renderer)
 
     local pixelColor = image:getPx(u,v)
 
@@ -119,7 +191,7 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
         indexT = self.usedTextColorIndex 
         if ( not indexT )then
             if ( self.textColorShader) then
-                indexT = self.textColorShader(pixelColor,palette,image,renderer)
+                indexT = self.textColorShader(pixelColor,palette,image,renderer,u,v)
             else
                 indexT = pixelColor:findClosest(palette)
             end
@@ -128,7 +200,7 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
         indexB = self.usedBackColorIndex 
         if ( not indexB ) then
             if (self.backColorShader) then
-                indexB = self.backColorShader(pixelColor,palette,image,renderer)
+                indexB = self.backColorShader(pixelColor,palette,image,renderer,u,v)
             else
                 indexB = pixelColor:findClosest(palette)
             end
@@ -180,4 +252,4 @@ function VerboseCombinator:findCombination(u,v,image,palette,renderer)
     return {char,hexTable[indexT],hexTable[indexB]}
 end
 
-return VerboseCombinator
+return combinator
