@@ -1,15 +1,42 @@
+--[[
+
+    
+
+    SimpleCombinator: {
+        name: string,
+        new: function,
+        onPaletteChange: function,
+        onImageChange: function,
+        findCombination: function
+    }
+
+]]
+
 local Color = require("Color")
 
-local SimpleCombinator = {name="SimpleCombinator"}
-
+local combinator = {name="SimpleCombinator"}
 
 local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
+
 
 local function round(x)
     return math.floor(x+0.5)
 end
 
-function SimpleCombinator:new(args)
+--[[
+
+    this function creates a new SimpleCombinator instance, 
+    this should generaly only be done once per program
+
+    function new(
+        self: SimpleCombinator,
+        args:{
+            cacheSize: ?number | 100
+        }
+    ) -> SimpleCombinator
+
+]]
+function combinator:new(args)
     --[[ args {
         cacheSize = int
     } ]]
@@ -27,15 +54,53 @@ function SimpleCombinator:new(args)
     return o
 end
 
-function SimpleCombinator:onPaletteChange()
+--[[
+
+    this function is called when the palette is different from last Renderer.render call
+
+    onPaletteChange(
+        self: SimpleCombinator,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function combinator:onPaletteChange()
     self.cache = {}
 end
 
-function SimpleCombinator:onImageChange()
+--[[
+
+    this function is called by Renderer when the image is different from last Renderer.render call
+
+    onImageChange(
+        self: SimpleCombinator,
+        image: ImageHandler,
+        palette: [Color],
+        renderer: Renderer
+    ) -> void
+
+]]
+function combinator:onImageChange()
 
 end
 
-function SimpleCombinator:findCombination(u,v,image,palette)
+--[[
+
+    this function is used in Renderer to turn image information into actual characters displayed on the monitor
+    it returns an array of size 3 in this format : 
+    [character to display, palette index in hex format for the text color, palette index in hex format for the background color]
+
+    findCombination(
+        self: SimpleCombinator,
+        u: number, 
+        v: number, 
+        image: ImageHandler, 
+        palette: [Color]
+    ) -> [char, char, char]
+
+]]
+function combinator:findCombination(u,v,image,palette)
     local px = image:getPx(u,v)
 
     local index = px:toHash(self.cacheSize)
@@ -52,4 +117,4 @@ function SimpleCombinator:findCombination(u,v,image,palette)
     end
 end
 
-return SimpleCombinator
+return combinator
