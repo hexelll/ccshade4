@@ -1,3 +1,19 @@
+--[[
+
+    Used to represent Images, with many utils.
+    Pixel data is a in a big array of Color objects.
+    Uses UV coordinates as numbers in the [0,1] range
+
+    ImageHandler: {
+        sx: number,
+        sy: number,
+        data: [Color]
+        uniqueColors: [Color], // initialised as {} by ImageHandler:new()
+        debug: bool
+    }
+
+]]
+
 local Color = require("Color")
 
 local ImageHandler = {}
@@ -11,11 +27,23 @@ local function clamp(x)
     return math.min(math.max(x,0),1)
 end
 
+-- internal util to calculate indexes in data[]
 local function uvToIndex(sx,sy,u,v)
     local x,y = round(u*(sx-1)) , round(v*(sy-1))
     return y*sx + x + 1
 end
 
+--[[
+	Creates new instance of ImageHandler.
+
+	new(
+		sx:     number,                 // x size
+        sy:     number,                 // y size
+        data:   ?[Color],               // Array of pixel Colors, 
+                                        // if nil : filled with transparent Black ( Color:new(0,0,0,0) )
+        debug:  bool        | false         
+	) -> ImageHandler
+]]
 function ImageHandler:new(sx,sy,data,debug)
 
     local sx,sy = math.max(sx,0),math.max(sy,0)
@@ -38,6 +66,14 @@ function ImageHandler:new(sx,sy,data,debug)
     return o
 end
 
+--[[
+	Copies the image.
+    Keeping the same data,
+    Thus also keeping the exact same Color objects
+    (copied by reference)
+
+	copy() -> ImageHandler
+]]
 function ImageHandler:copy()
     local newData = {}
     for i=1,self.sx*self.sy do
@@ -47,6 +83,14 @@ function ImageHandler:copy()
     local img = ImageHandler:new(self.sx,self.sy,newData)
     return img
 end
+
+--[[
+	Same as copy() but doesn't keep the original's Color objects.
+    All Colors in the image will be truly duplicated, 
+    not just referenced.
+
+	duplicate() -> ImageHandler
+]]
 function ImageHandler:duplicate()
     local newData = {}
     for i=1,self.sx*self.sy do
@@ -57,6 +101,15 @@ function ImageHandler:duplicate()
     return img
 end
 
+--[[
+    Resizes the image using nearest-neighbor sampling.
+    Fast and preserves hard edges, but may appear jagged when scaled.
+
+	resize(
+        newSx: number, 
+        newSy: number   
+    ) -> ImageHandler
+]]
 function ImageHandler:resize(newSx, newSy)
     local newData = {}
     for i=0,newSx-1 do
@@ -71,6 +124,16 @@ function ImageHandler:resize(newSx, newSy)
     return self
 end
 
+--[[
+	Resizes the image, overriding its data and sx/sy values.
+    Each pixel in the resized image is the average Color of a region of pixels from the original image.
+    This is smoother than resize() but also slower and less crisp.
+
+	resizeMean(
+        newSx: number, 
+        newSy: number   
+    ) -> ImageHandler
+]]
 function ImageHandler:resizeMean(newSx,newSy)
     local newData = {}
     local dx = round(self.sx/newSx)
@@ -105,17 +168,43 @@ function ImageHandler:resizeMean(newSx,newSy)
     return self
 end
 
+--[[
+	Returns the Color at a specific point (u,v) of the image.
+
+	getPx(
+        u: number, 
+        v: number   
+    ) -> Color
+]]
 function ImageHandler:getPx(u,v)
     local index = uvToIndex(self.sx,self.sy,u,v)
     return self.data[index]
 end
 
+--[[
+	Sets the Color at a specific point (u,v) of the image.
+
+	setPx(
+        u: number, 
+        v: number,
+        color: Color // new color for the point
+    ) -> ImageHandler
+]]
 function ImageHandler:setPx(u,v,color)
     local index = uvToIndex(self.sx,self.sy,u,v)
     self.data[index] = color
     return self
 end
 
+--[[
+	Samples the image to find unique colors used in it.
+    Fills self.uniqueColors with these Colors.
+    Used by ImageHandler:findPalette.
+
+	findUniqueColors(
+        interval: number, // how close the samples are taken (step in u,v)
+    ) -> void
+]]
 function ImageHandler:findUniqueColors(interval)
     interval = interval or 0.01
     self.uniqueColors = {}
@@ -127,6 +216,16 @@ function ImageHandler:findUniqueColors(interval)
     end
 end
 
+--[[
+	
+
+	findPalette(
+        distanceFunction: function | Color.distance  
+        paletteSize:      number   | 16,        // usually 16
+        eps:              number   | 0.00001,
+        maxIteration:     number   | 50
+    ) -> [Color]
+]]
 function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
     sleep()
     local t
@@ -203,6 +302,16 @@ function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
     return palette
 end
 
+--[[
+	Applies a shader to the image.
+    The shader is called with args : 
+    (self, u, v)
+    The shader must return a Color.
+
+	process(
+        shader: function
+    ) -> ImageHandler
+]]
 function ImageHandler:process(shader)
     local t
     if self.debug then
@@ -227,24 +336,14 @@ function ImageHandler:process(shader)
     return self
 end
 
-function ImageHandler:unlinearize()
-    return self:process(function(s,u,v)
-        local px = s:getPx(u,v)
-        local col = Color()
-        for i=1,3 do
-            col[i] = px[i] <= 0.0031308 and 12.92*px[i] or 1.055*(px[i]^(1/2.4))-0.055
-        end
-        return col
-    end)
-end
+--[[
+	Creates a new image with given size,
+    The image is the result of a Shader applied on self.
 
-function ImageHandler:linearize()
-    return self:process(function(s,u,v)
-        local px = s:getPx(u,v)
-        return px:linearize()
-    end)
-end
-
+	process(
+        shader: function
+    ) -> ImageHandler
+]]
 function ImageHandler:map(shader,sx,sy)
     sx = sx and sx or self.sx
     sy = sy and sy or self.sy
@@ -262,6 +361,34 @@ function ImageHandler:map(shader,sx,sy)
         end
     end
     return newImg
+end
+
+--[[
+	Linearizes every Color in the Image.
+
+	linearize() -> ImageHandler
+]]
+function ImageHandler:linearize()
+    return self:process(function(s,u,v)
+        local px = s:getPx(u,v)
+        return px:linearize()
+    end)
+end
+
+--[[
+	Un-linearizes every Color in the Image.
+
+	unlinearize() -> ImageHandler
+]]
+function ImageHandler:unlinearize()
+    return self:process(function(s,u,v)
+        local px = s:getPx(u,v)
+        local col = Color()
+        for i=1,3 do
+            col[i] = px[i] <= 0.0031308 and 12.92*px[i] or 1.055*(px[i]^(1/2.4))-0.055
+        end
+        return col
+    end)
 end
 
 return ImageHandler
