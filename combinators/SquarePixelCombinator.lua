@@ -28,7 +28,7 @@ end
 
 --[[
 
-    this function creates a new CharCombinator instance, 
+    this function creates a new SquarePixelCombinator instance, 
     this should generaly only be done once per program
 
     function new(
