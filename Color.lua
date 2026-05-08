@@ -1,23 +1,19 @@
-local Color = {}
+--[[
 
-local hexTableI = {
-    ["0"] = 0,
-    ["1"] = 1,
-    ["2"] = 2,
-    ["3"] = 3,
-    ["4"] = 4,
-    ["5"] = 5,
-    ["6"] = 6,
-    ["7"] = 7,
-    ["8"] = 8,
-    ["9"] = 9,
-    ["a"] = 10,
-    ["b"] = 11,
-    ["c"] = 12,
-    ["d"] = 13,
-    ["e"] = 14,
-    ["f"] = 15
-}
+    Used to represent colors, 
+    Offers many utils for computation with colors.
+    r,g,b,a are mainly intended to be in 0-1
+
+    Color: {
+        r: number,
+        g: number,
+        b: number,
+        a: number,
+    }
+
+]]
+
+local Color = {}
 
 local hexTable = {
     "0",
@@ -37,6 +33,25 @@ local hexTable = {
     "e",
     "f"
 }
+-- reverse of hexTable
+local hexTableI = {
+    ["0"] = 0,
+    ["1"] = 1,
+    ["2"] = 2,
+    ["3"] = 3,
+    ["4"] = 4,
+    ["5"] = 5,
+    ["6"] = 6,
+    ["7"] = 7,
+    ["8"] = 8,
+    ["9"] = 9,
+    ["a"] = 10,
+    ["b"] = 11,
+    ["c"] = 12,
+    ["d"] = 13,
+    ["e"] = 14,
+    ["f"] = 15
+}
 
 local function round(x)
     return math.floor(x+0.5)
@@ -46,7 +61,20 @@ local function clamp(x)
     return math.min(math.max(x,0),1)
 end
 
--- rgb 0-1
+--[[
+	Creates new instance of Color.
+    Can be given r,g,b,a or Hex as a String.
+    You can also use Color() instead.
+    r,g,b,a are intended to be in 0-1
+
+	new(
+		r: number/String    | 0,    // if number : red
+                                    // if String : parsed as Hex with Color.fromHex(r), g,b and a are ignored
+        g: number           | 0,    // green
+        b: number           | 0,    // blue
+        a: number           | 1,    // alpha
+	) -> Color
+]]
 function Color:new(r,g,b,a)
     if type(r) == "string" then
         return Color.fromHex(r)
@@ -57,20 +85,27 @@ function Color:new(r,g,b,a)
     a = a and a or 1
     local o = {r,g,b,a}
     setmetatable(o,{
-        __index=function(_,k)
+        __index=function(_,k)   
             return self[k]
         end,
+        -- to String format : {r,g,b,a} rounded to 0.01
         __tostring=function(s)
             return "("..(round(s[1]*100)/100)..","..(round(s[2]*100)/100)..","..(round(s[3]*100)/100)..","..(round(s[4]*100)/100)..")"
         end,
+
+        -- Math operations :
+        -- applies operation component by component, except alpha
+
+        -- Substraction : 
         __sub=function(a,b)
             if type(a) == "table" and type(b) == "number" then
                 return Color:new(a[1]-b,a[2]-b,a[3]-b,a[4])
             end
             if type(a) == "table" and type(b) == "table" then
-                return Color:new(a[1]-b[1],a[2]-b[2],a[3]-b[3])
+                return Color:new(a[1]-b[1],a[2]-b[2],a[3]-b[3],a[4])
             end
         end,
+        -- Addition : 
         __add=function(a,b)
             if type(a) == "table" and type(b) == "number" then
                 return Color:new(a[1]+b,a[2]+b,a[3]+b,a[4])
@@ -79,6 +114,7 @@ function Color:new(r,g,b,a)
                 return Color:new(a[1]+b[1],a[2]+b[2],a[3]+b[3])
             end
         end,
+        -- Multiplication :
         __mul=function(a,b)
             if type(a) == "number" and type(b) == "table" then
                 a,b=b,a
@@ -90,6 +126,8 @@ function Color:new(r,g,b,a)
                 return Color:new(a[1]*b[1],a[2]*b[2],a[3]*b[3],a[4]*b[4])
             end
         end,
+
+        -- Equality : two colors are equal if : r1=r2 and g1=g2 and b1=b2
         __eq=function(a,b)
             return a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
         end
@@ -97,19 +135,47 @@ function Color:new(r,g,b,a)
     return o
 end
 
+--[[
+	Basic distance between two colors (self and given Color).
+
+	distance(
+		color: Color, // the other Color
+	) -> number
+]]
 function Color:distance(color)
     local s1,s2,s3,c1,c2,c3 = self[1],self[2],self[3],color[1],color[2],color[3]
     return (s1-c1)*(s1-c1)+(s2-c2)*(s2-c2)+(s3-c3)*(s3-c3)
 end
 
+-- interpolation util (apparently reversed from convention)
 local function interp(a,b,k)
     return a*k+b*(1-k)
 end
+--[[
+	Mix two colors (self and given Color) with a single coefficient.
+    k represents "how much" of self to use.
+    Useful to find how a combination will appear on average (when viewed from afar)
 
+	mix(
+		color: Color,
+        k: number,    // coeficient for the mix
+	) -> Color
+]]
 function Color:mix(color,k)
     return Color:new(interp(self[1],color[1],k),interp(self[2],color[2],k),interp(self[3],color[3],k),interp(self[4],color[4],k))
 end
 
+--[[
+	Find closest color in palette to self.
+    Uses given distanceFunction to rank palette colors.
+    RETURNS INDEX IN PALETTE.
+
+	findClosest(
+		palette: [Color],           
+        distanceFunction: function, // the function to use to rank palette colors
+        palettesize: number,        // can be given palettesize to reduce calls of #palette
+	) -> number
+]]
 function Color:findClosest(palette,distanceFunction,palettesize)
     palettesize = palettesize and palettesize or #palette
     distanceFunction = distanceFunction and distanceFunction or self.distance
@@ -125,6 +191,14 @@ function Color:findClosest(palette,distanceFunction,palettesize)
     return mini
 end
 
+--[[
+	Converts Color to Oklab color space.
+    Theoretically closer to actual human sight.
+    But it is pretty slow to calculate and gives barely noticeable changes, 
+    especially amongst the bigger constraints of CC displays.
+
+	toOklab() -> Color
+]]
 function Color:toOklab()
     local r, g, b = self[1],self[2],self[3]
 
@@ -150,10 +224,30 @@ function Color:toOklab()
     return Color:new( 100 * L, 100 * A, 100 * B, self[4] )
 end
 
+--[[
+	Color distance using Oklab color space
+    Theoretically closer to actual human sight.
+    But it is pretty slow to calculate and gives barely noticeable changes, 
+    especially amongst the bigger constraints of CC displays.
+
+	distanceOklab(
+		color: Color,   // the other color         
+    ) -> number
+]]
 function Color:distanceOklab(color)
     return self.distance(self:toOklab(),color:toOklab())
 end
 
+--[[
+	New Color from hex.
+    Supports formats with or without leading #
+    ("#FFFFFF" or "FFFFFF")
+    Doesn't handle alpha.
+
+	fromHex(
+		hex: String,
+	) -> Color
+]]
 function Color.fromHex(hex)
     hex = string.lower(hex)
     local j = hex:sub(1,1) == "#" and 1 or 0
@@ -165,6 +259,13 @@ function Color.fromHex(hex)
     return Color:new(table.unpack(rgb))
 end
 
+--[[
+	Converts a color to Hex, all lowercase.
+    Doesn't handle alpha.
+    Format without leading # ("ffffff")
+
+	toHex() -> String
+]]
 function Color:toHex()
     local rgb = {round(self[1]*255),round(self[2]*255),round(self[3]*255)}
     local hex = hexTable[(rgb[1] % 16)+1]..hexTable[(round((rgb[1]-(rgb[1] % 16))/16)%16)+1]..
@@ -173,10 +274,22 @@ function Color:toHex()
     return hex
 end
 
+--[[
+	Duplicates Color.
+    Allows reuse without sharing references.
+
+	duplicate() -> Color
+]]
 function Color:duplicate()
     return Color:new(table.unpack(self))
 end
 
+--[[
+    Linearize Color.
+    Allows for "more accurate" math with colors.
+
+	linearize() -> Color
+]]
 function Color:linearize()
     local col = Color()
     for i=1,3 do
@@ -185,10 +298,26 @@ function Color:linearize()
     return col
 end
 
+--[[
+	Faster Color:linearize().
+    Not theoretically perfect linearization but good enough for most purposes.
+
+	gamma2() -> Color
+]]
 function Color:gamma2()
     return Color(self[1]^2.2,self[2]^2.2,self[3]^2.2)
 end
 
+--[[
+	Maps Color to int, with int in [0, size^3 - 1]
+    Size determines the precision and size of the map.
+    Useful to index caches.
+    Doesn't take alpha into account.
+
+	toHash(
+        size: number // To how many discrete values each component (r,g,b) of the Color is rounded to 
+    ) -> number
+]]
 function Color:toHash(size)
     local r = math.floor(self[1]*(size-1)+0.5)
     local g = math.floor(self[2]*(size-1)+0.5)
@@ -196,6 +325,7 @@ function Color:toHash(size)
     return r*size*size+g*size+b
 end
 
+-- Makes it so you can shorten Color:new() to just Color()
 setmetatable(Color,{__call=function(self,...)
     return self:new(...)
 end})
