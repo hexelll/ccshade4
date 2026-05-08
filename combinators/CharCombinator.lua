@@ -20,6 +20,9 @@ local CharCombinator = {name="CharCombinator"}
 local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
 local charCoefs = {0 ,19/54 ,25/54 ,21/54 ,13/54 ,19/54 ,18/54 ,12/54 ,36/54 ,0 ,0 ,14/54 ,17/54 ,0 ,15/54 ,22/54 ,13/54 ,13/54 ,20/54 ,12/54 ,19/54 ,20/54 ,8/54 ,24/54 ,13/54 ,13/54 ,11/54 ,11/54 ,7/54 ,10/54 ,13/54 ,13/54 ,0 ,6/54 ,6/54 ,20/54 ,15/54 ,11/54 ,15/54 ,3/54 ,9/54 ,9/54 ,6/54 ,9/54 ,3/54 ,5/54 ,2/54 ,7/54 ,19/54 ,12/54 ,16/54 ,14/54 ,15/54 ,17/54 ,15/54 ,12/54 ,17/54 ,15/54 ,4/54 ,5/54 ,7/54 ,10/54 ,7/54 ,14/54 ,24/54 ,18/54 ,20/54 ,13/54 ,18/54 ,17/54 ,13/54 ,17/54 ,17/54 ,11/54 ,10/54 ,15/54 ,11/54 ,17/54 ,17/54 ,16/54 ,14/54 ,16/54 ,18/54 ,15/54 ,11/54 ,15/54 ,13/54 ,17/54 ,13/54 ,9/54 ,15/54 ,11/54 ,7/54 ,11/54 ,5/54 ,5/54 ,3/54 ,14/54 ,16/54 ,11/54 ,16/54 ,15/54 ,11/54 ,17/54 ,14/54 ,6/54 ,11/54 ,12/54 ,7/54 ,13/54 ,12/54 ,12/54 ,14/54 ,14/54 ,9/54 ,13/54 ,9/54 ,12/54 ,9/54 ,14/54 ,9/54 ,15/54 ,13/54 ,9/54 ,7/54 ,9/54 ,6/54 ,1/3 ,0 ,1/6 ,1/6 ,1/3 ,1/6 ,1/3 ,1/3 ,1/2 ,1/6 ,1/3 ,1/3 ,1/2 ,1/3 ,1/2 ,1/2 ,2/3 ,1/6 ,1/3 ,1/3 ,1/2 ,1/3 ,1/2 ,1/2 ,2/3 ,1/3 ,1/2 ,1/2 ,2/3 ,1/2 ,2/3 ,2/3 ,5/6 ,0 ,6/54 ,13/54 ,16/54 ,16/54 ,17/54 ,6/54 ,20/54 ,2/54 ,20/54 ,11/54 ,10/54 ,7/54 ,5/54 ,18/54 ,5/54 ,8/54 ,14/54 ,7/54 ,8/54 ,2/54 ,15/54 ,19/54 ,4/54 ,2/54 ,8/54 ,12/54 ,10/54 ,14/54 ,13/54 ,17/54 ,9/54 ,16/54 ,16/54 ,19/54 ,18/54 ,16/54 ,15/54 ,20/54 ,14/54 ,18/54 ,18/54 ,21/54 ,18/54 ,11/54 ,11/54 ,12/54 ,11/54 ,19/54 ,17/54 ,16/54 ,16/54 ,17/54 ,16/54 ,16/54 ,9/54 ,19/54 ,13/54 ,13/54 ,12/54 ,13/54 ,9/54 ,14/54 ,19/54 ,16/54 ,16/54 ,19/54 ,18/54 ,16/54 ,15/54 ,17/54 ,13/54 ,17/54 ,17/54 ,20/54 ,17/54 ,7/54 ,7/54 ,8/54 ,7/54 ,15/54 ,16/54 ,14/54 ,14/54 ,17/54 ,16/54 ,14/54 ,7/54 ,15/54 ,14/54 ,14/54 ,13/54 ,14/54 ,17/54 ,13/54 ,17/54}
 
+local function round(x)
+    return math.floor(x+0.5)
+end
 
 --[[
 
@@ -135,12 +138,6 @@ function CharCombinator:onImageChange(image,palette,renderer)
 
 end
 
-local function round(x)
-    return math.floor(x+0.5)
-end
-
-local lastt = os.clock()
-
 --[[
 
     this function is used in Renderer to turn image information into actual characters displayed on the monitor
@@ -159,12 +156,16 @@ local lastt = os.clock()
 function CharCombinator:findCombination(u,v,image,palette)
     local searchedColor = image:getPx(u,v)
 
+    -- cache 
     local index = searchedColor:toHash(self.cacheSize)
-
     local cacheResult = self.cache[index]
     if ( cacheResult ) then
         return cacheResult
     else    
+        local lastt = os.clock()
+
+        -- search in self.combinationTable for closest combination to searchedColor
+        -- keeps a list of best candidates of size self.nbSearched
         local combinationTable = self.combinationTable
         local usedChars = self.usedChars
         local nbSearched = self.nbSearched
@@ -233,10 +234,9 @@ function CharCombinator:findCombination(u,v,image,palette)
             end
         end
 
-        -- select smallest closeness among best difs
+        -- select smallest closeness (= smoothest combination) among the list found previously
         local bestIdx = 1
         local bestClose = best[1][5]
-
         for i = 2, #best do
             local cclose = best[i][5]
             if cclose < bestClose then
@@ -244,9 +244,10 @@ function CharCombinator:findCombination(u,v,image,palette)
                 bestIdx = i
             end
         end
-
         local bestofbests = best[bestIdx]
+
         combination = {string.char(bestofbests[3]),hexTable[bestofbests[1]],hexTable[bestofbests[2]]}
+
         if (os.clock()-lastt) > 5 then
             sleep()
             lastt = os.clock()
