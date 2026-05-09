@@ -22,9 +22,22 @@ local combinator = {name="SquarePixelCombinator"}
 
 local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
 
+
 local function round(x)
     return math.floor(x+0.5)
 end
+
+-- cache management util
+local function addToCache(self,palette,rawcol)
+    local hcol = rawcol:toHash(self.cacheSize)
+    if self.cache[hcol] then
+        return self.cache[hcol]
+    end
+    local c = rawcol:findClosest(palette)
+    self.cache[hcol] = c
+    return c
+end
+
 
 --[[
 
@@ -81,15 +94,6 @@ end
 function combinator:onImageChange(image,palette,renderer)
 
 end
-local function addToCache(self,palette,rawcol)
-    local hcol = rawcol:toHash(self.cacheSize)
-    if self.cache[hcol] then
-        return self.cache[hcol]
-    end
-    local c = rawcol:findClosest(palette)
-    self.cache[hcol] = c
-    return c
-end
 
 --[[
 
@@ -107,14 +111,18 @@ end
 
 ]]
 function combinator:findCombination(u,v,image,palette,renderer)
-    local combination = {}
     local step = 1/(renderer.sy-1)
     local c = image:getPx(u,v)
+
+    local combination = {}
+
+    -- different process on even/odd rows 
     if round(v*(renderer.sy-1))%2 == 0 then
         local col = addToCache(self,palette,c)
         local othercol = image:getPx(u,v+step*2/3)
         othercol = othercol and othercol or c
         othercol = addToCache(self,palette,othercol)
+        
         combination[1] = '\143'
         combination[2] = hexTable[col]
         combination[3] = hexTable[othercol]
@@ -125,10 +133,12 @@ function combinator:findCombination(u,v,image,palette,renderer)
         local othercol = image:getPx(u,v-step/3)
         othercol = othercol and othercol or c
         othercol = addToCache(self,palette,othercol)
+        
         combination[1] = '\131'
         combination[3] = hexTable[col]
         combination[2] = hexTable[othercol]
     end
+
     return combination
 end
 
