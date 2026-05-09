@@ -58,7 +58,7 @@ function ImageHandler:new(sx,sy,data,debug)
         end
     end
 
-    local o = {sx=sx,sy=sy,data=data,uniqueColors={},debug=debug}
+    local o = {sx=sx,sy=sy,data=data,uniqueColors={},debug=debug,modified=true}
 
     setmetatable(o,{
         __index=function(_,k)
@@ -213,6 +213,7 @@ end
 function ImageHandler:setPx(u,v,color)
     local index = uvToIndex(self.sx,self.sy,u,v)
     self.data[index] = color
+    self.modified = true
     return self
 end
 

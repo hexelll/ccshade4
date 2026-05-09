@@ -13,15 +13,14 @@ local ImageHandler = require "ImageHandler"
 	new(
 		self: Renderer,
         args:{
-            term:           term/monitor                          
-            combinators:    [Combinator],               // array of instances of any Combinators, must contain at least one
-            sx:             number        | term width  // x size
-            sy:             number        | term height // y size
-            px:             number        | 0           // x position
-            py:             number        | 0           // y position
-            mask:           ImageHandler                // mask 
-                                                        // if nil : ImageHandler filled with combinators[1]
-            debug:          bool
+            term:        ?terminal/monitor | term                         
+            combinators: [Combinator],                      // array of instances of any Combinators, must contain at least one
+            sx:          ?number | term.width               // x size
+            sy:          ?number | term.height              // y size
+            px:          ?number | 0                        // x position
+            py:          ?number | 0                        // y position
+            mask:        ?ImageHandler | [ combinators[1] ] // mask
+            debug:       bool
         }       
 	) -> Renderer
 ]]
@@ -51,11 +50,34 @@ function Renderer:new(params)
     return o
 end
 
+--[[
+
+    sets the combinator to be used at a point on the screen
+
+    setMaskAt(
+        self: Renderer,
+        u: number,
+        v: number,
+        combinator: Combinator
+    ) -> Renderer
+
+]]
 function Renderer:setMaskAt(u,v,combinator)
     self.mask:setPx(u,v,combinator)
     return self
 end
 
+--[[
+
+    changes the size of the renderer and its mask
+
+    resize(
+        self: Renderer,
+        sx: number,
+        sy: number
+    ) -> Renderer
+
+]]
 function Renderer:resize(sx,sy)
     self.sx = sx
     self.sy = sy
@@ -63,18 +85,50 @@ function Renderer:resize(sx,sy)
     return self
 end
 
+--[[
+
+    returns the combinator at a point on the screen
+
+    setMaskAt(
+        self: Renderer,
+        u: number,
+        v: number
+    ) -> Renderer
+
+]]
 function Renderer:getCombinator(u,v)
     return self.mask:getPx(u,v)
 end
 
+--[[
+
+    computes the characters to be drawn to a terminal.
+    it returns the lines of character to blit and 
+    a display function that can be used to display the image to the renderer term
+
+    render(
+        self: Renderer,
+        image: ImageHandler,
+        palette: ?[Color] | image:findPalette()
+    ) -> {
+        lines: [ [char,char,char] ],
+        display: function()->Renderer
+    }
+
+]]
 function Renderer:render(image,palette)
     local t
     if self.debug then
         t = os.clock()
         print("start render")
     end
-    palette = palette and palette or image:findPalette()
-    
+    if image.modified then
+        palette = palette and palette or image:findPalette()
+        image.modified = false
+        for _,combinator in pairs(self.combinators) do
+            combinator:onImageChange(image,palette,self)
+        end
+    end
     local equal = true
     if self.lastPalette then
         for i=1,#palette do
@@ -90,10 +144,6 @@ function Renderer:render(image,palette)
         for _,combinator in pairs(self.combinators) do
             combinator:onPaletteChange(palette,self)
         end
-    end
-
-    for _,combinator in pairs(self.combinators) do
-        combinator:onImageChange(image,palette,self)
     end
     
     self.lastPalette = palette
@@ -134,6 +184,16 @@ function Renderer:render(image,palette)
     end}
 end
 
+--[[
+
+    displays an array of lines to the renderer term
+
+    display(
+        self: Renderer,
+        lines: [ [char,char,char] ]
+    ) -> Renderer
+
+]]
 function Renderer:display(lines)
     local t
     if self.debug then
