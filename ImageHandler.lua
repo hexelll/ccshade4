@@ -137,7 +137,7 @@ end
 
 --[[
 
-	Resizes the image.
+	Resizes the image while keeping more detail then ImageHandler.resize but is much slower.
     Each pixel in the resized image is the average Color of a region of pixels from the original image.
     This is smoother than resize() but also slower and less crisp.
 
@@ -152,7 +152,6 @@ function ImageHandler:resizeMean(newSx,newSy)
     local newData = {}
     local dx = round(self.sx/newSx)
     local dy = round(self.sy/newSy)
-    print(newSx,self.sx,dx,newSy,self.sy,dy)
     for i=0,self.sx-1 do
         for j=0,self.sy-1 do
             local cs = Color()
