@@ -1,7 +1,30 @@
+
 local Renderer = {}
 local Color = require "Color"
 local ImageHandler = require "ImageHandler"
 
+--[[
+	Creates new Renderer instance.
+    Given every combinator instance used by the render (so their on...Change() can be called).
+    Given a mask to define which combinator to use for every texel in the render.
+    The mask is an ImageHandler with the same size as the Renderer,
+    filled with combinators (same instances as given in combinator).
+
+	new(
+		self: Renderer,
+        args:{
+            term:           term/monitor                          
+            combinators:    [Combinator],               // array of instances of any Combinators, must contain at least one
+            sx:             number        | term width  // x size
+            sy:             number        | term height // y size
+            px:             number        | 0           // x position
+            py:             number        | 0           // y position
+            mask:           ImageHandler                // mask 
+                                                        // if nil : ImageHandler filled with combinators[1]
+            debug:          bool
+        }       
+	) -> Renderer
+]]
 function Renderer:new(params)
     local o = {}
     o.term = params.term and params.term or term
