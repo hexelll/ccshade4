@@ -4,6 +4,7 @@ local Color = require "Color"
 local ImageHandler = require "ImageHandler"
 
 --[[
+
 	Creates new Renderer instance.
     Given every combinator instance used by the render (so their on...Change() can be called).
     Given a mask to define which combinator to use for every texel in the render.
@@ -23,6 +24,7 @@ local ImageHandler = require "ImageHandler"
             debug:       bool
         }       
 	) -> Renderer
+
 ]]
 function Renderer:new(params)
     local o = {}
@@ -122,8 +124,9 @@ function Renderer:render(image,palette)
         t = os.clock()
         print("start render")
     end
+    palette = self.lastPalette
     if image.modified then
-        palette = palette and palette or image:findPalette()
+        palette = image:findPalette()
         image.modified = false
         for _,combinator in pairs(self.combinators) do
             combinator:onImageChange(image,palette,self)
