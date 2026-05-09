@@ -7,7 +7,7 @@
     ImageHandler: {
         sx: number,
         sy: number,
-        data: [Color]
+        data: [Color],
         uniqueColors: [Color], // initialised as {} by ImageHandler:new()
         debug: bool
     }
@@ -27,22 +27,25 @@ local function clamp(x)
     return math.min(math.max(x,0),1)
 end
 
--- internal util to calculate indexes in data[]
+-- internal util to calculate indexes in data
 local function uvToIndex(sx,sy,u,v)
     local x,y = round(u*(sx-1)) , round(v*(sy-1))
     return y*sx + x + 1
 end
 
 --[[
+
 	Creates new instance of ImageHandler.
 
 	new(
-		sx:     number,                 // x size
-        sy:     number,                 // y size
-        data:   ?[Color],               // Array of pixel Colors, 
-                                        // if nil : filled with transparent Black ( Color:new(0,0,0,0) )
-        debug:  bool        | false         
+        self:  ImageHandler
+		sx:    number,        // x size
+        sy:    number,        // y size
+        data:  ?[Color],      // Array of pixel Colors, 
+                              // if nil : filled with transparent Black ( Color:new(0,0,0,0) )
+        debug: ?bool | false         
 	) -> ImageHandler
+    
 ]]
 function ImageHandler:new(sx,sy,data,debug)
 
@@ -67,12 +70,13 @@ function ImageHandler:new(sx,sy,data,debug)
 end
 
 --[[
-	Copies the image.
-    Keeping the same data,
-    Thus also keeping the exact same Color objects
-    (copied by reference)
 
-	copy() -> ImageHandler
+	Copies the image by reference
+
+	copy(
+        self: ImageHandler
+    ) -> ImageHandler
+
 ]]
 function ImageHandler:copy()
     local newData = {}
@@ -85,11 +89,15 @@ function ImageHandler:copy()
 end
 
 --[[
-	Same as copy() but doesn't keep the original's Color objects.
+
+	Same as copy but doesn't keep the original's Color objects.
     All Colors in the image will be truly duplicated, 
     not just referenced.
 
-	duplicate() -> ImageHandler
+	duplicate(
+        self: ImageHandler
+    ) -> ImageHandler
+
 ]]
 function ImageHandler:duplicate()
     local newData = {}
@@ -102,13 +110,16 @@ function ImageHandler:duplicate()
 end
 
 --[[
+
     Resizes the image using nearest-neighbor sampling.
     Fast and preserves hard edges, but may appear jagged when scaled.
 
 	resize(
+        self: ImageHandler,
         newSx: number, 
         newSy: number   
     ) -> ImageHandler
+
 ]]
 function ImageHandler:resize(newSx, newSy)
     local newData = {}
@@ -125,14 +136,17 @@ function ImageHandler:resize(newSx, newSy)
 end
 
 --[[
-	Resizes the image, overriding its data and sx/sy values.
+
+	Resizes the image.
     Each pixel in the resized image is the average Color of a region of pixels from the original image.
     This is smoother than resize() but also slower and less crisp.
 
 	resizeMean(
+        self: ImageHandler,
         newSx: number, 
         newSy: number   
     ) -> ImageHandler
+
 ]]
 function ImageHandler:resizeMean(newSx,newSy)
     local newData = {}
@@ -169,12 +183,15 @@ function ImageHandler:resizeMean(newSx,newSy)
 end
 
 --[[
+
 	Returns the Color at a specific point (u,v) of the image.
 
 	getPx(
+        self: ImageHandler,
         u: number, 
         v: number   
     ) -> Color
+
 ]]
 function ImageHandler:getPx(u,v)
     local index = uvToIndex(self.sx,self.sy,u,v)
@@ -182,13 +199,16 @@ function ImageHandler:getPx(u,v)
 end
 
 --[[
+
 	Sets the Color at a specific point (u,v) of the image.
 
 	setPx(
+        self: ImageHandler,
         u: number, 
         v: number,
         color: Color // new color for the point
     ) -> ImageHandler
+
 ]]
 function ImageHandler:setPx(u,v,color)
     local index = uvToIndex(self.sx,self.sy,u,v)
@@ -197,13 +217,16 @@ function ImageHandler:setPx(u,v,color)
 end
 
 --[[
+
 	Samples the image to find unique colors used in it.
     Fills self.uniqueColors with these Colors.
     Used by ImageHandler:findPalette.
 
 	findUniqueColors(
-        interval: number, // how close the samples are taken (step in u,v)
-    ) -> void
+        self: ImageHandler,
+        interval: ?number | 0.01, // how close the samples are taken (step in u,v)
+    ) -> ImageHandler
+
 ]]
 function ImageHandler:findUniqueColors(interval)
     interval = interval or 0.01
@@ -214,17 +237,22 @@ function ImageHandler:findUniqueColors(interval)
             self.uniqueColors[color:toHex()] = color
         end
     end
+    return self
 end
 
 --[[
-	
+    
+    finds a palette using kmeans.
+    for more information on how this works : https://www.kaggle.com/code/priyamchoksi/kmeanscolorization
 
 	findPalette(
-        distanceFunction: function | Color.distance  
-        paletteSize:      number   | 16,        // usually 16
-        eps:              number   | 0.00001,
-        maxIteration:     number   | 50
+        self: ImageHandler
+        distanceFunction: ?function | Color.distance  
+        paletteSize:      ?number   | 16,
+        eps:              ?number   | 0.00001, // decides when to stop the algorithm, bigger eps means faster search but worse results
+        maxIteration:     ?number   | 50
     ) -> [Color]
+    
 ]]
 function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
     sleep()
@@ -303,14 +331,18 @@ function ImageHandler:findPalette(distanceFunction,paletteSize,eps,maxIteration)
 end
 
 --[[
+
 	Applies a shader to the image.
-    The shader is called with args : 
-    (self, u, v)
-    The shader must return a Color.
 
 	process(
-        shader: function
+        self: ImageHandler,
+        shader: function(
+            self: ImageHandler, 
+            u: number, 
+            v: number
+        )-> Color
     ) -> ImageHandler
+    
 ]]
 function ImageHandler:process(shader)
     local t
@@ -337,12 +369,16 @@ function ImageHandler:process(shader)
 end
 
 --[[
-	Creates a new image with given size,
-    The image is the result of a Shader applied on self.
 
-	process(
-        shader: function
+	Creates a new image from a shader and a size.
+
+	map(
+        self: ImageHandler,
+        shader: function,
+        sx: ?number | self.sx,
+        sy: ?number | self.sy
     ) -> ImageHandler
+
 ]]
 function ImageHandler:map(shader,sx,sy)
     sx = sx and sx or self.sx
@@ -364,9 +400,13 @@ function ImageHandler:map(shader,sx,sy)
 end
 
 --[[
+
 	Linearizes every Color in the Image.
 
-	linearize() -> ImageHandler
+	linearize(
+        self: ImageHandler
+    ) -> ImageHandler
+
 ]]
 function ImageHandler:linearize()
     return self:process(function(s,u,v)
@@ -376,18 +416,18 @@ function ImageHandler:linearize()
 end
 
 --[[
-	Un-linearizes every Color in the Image.
 
-	unlinearize() -> ImageHandler
+	Same as linearize but with a different function
+
+	gamma2(
+        self: ImageHandler
+    ) -> ImageHandler
+
 ]]
-function ImageHandler:unlinearize()
+function ImageHandler:gamma2()
     return self:process(function(s,u,v)
         local px = s:getPx(u,v)
-        local col = Color()
-        for i=1,3 do
-            col[i] = px[i] <= 0.0031308 and 12.92*px[i] or 1.055*(px[i]^(1/2.4))-0.055
-        end
-        return col
+        return px:gamma2()
     end)
 end
 

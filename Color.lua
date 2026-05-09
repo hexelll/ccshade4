@@ -5,10 +5,21 @@
     r,g,b,a are mainly intended to be in 0-1
 
     Color: {
-        r: number,
-        g: number,
-        b: number,
-        a: number,
+        [1] : number, // r
+        [2] : number, // g
+        [3] : number, // b
+        [4] : number, // a
+        new: function,
+        distance: function,
+        findClosest: function,
+        toOklab: function,
+        distanceOklab: function,
+        fromHex: function,
+        toHex: function,
+        duplicate: function,
+        linearize: function,
+        gamma2: function,
+        toHash: function
     }
 
 ]]
@@ -64,15 +75,15 @@ end
 --[[
 	Creates new instance of Color.
     Can be given r,g,b,a or Hex as a String.
-    You can also use Color() instead.
+    You can also use Color(r,g,b,a) instead.
     r,g,b,a are intended to be in 0-1
 
 	new(
-		r: number/String    | 0,    // if number : red
-                                    // if String : parsed as Hex with Color.fromHex(r), g,b and a are ignored
-        g: number           | 0,    // green
-        b: number           | 0,    // blue
-        a: number           | 1,    // alpha
+		r: ?number/String    | 0,    // if number : red
+                                     // if String : parsed as Hex with Color.fromHex(r), g,b and a are ignored
+        g: ?number           | 0,    // green
+        b: ?number           | 0,    // blue
+        a: ?number           | 1,    // alpha
 	) -> Color
 ]]
 function Color:new(r,g,b,a)
@@ -88,7 +99,7 @@ function Color:new(r,g,b,a)
         __index=function(_,k)   
             return self[k]
         end,
-        -- to String format : {r,g,b,a} rounded to 0.01
+        -- to String format : (r,g,b,a) rounded to 0.01
         __tostring=function(s)
             return "("..(round(s[1]*100)/100)..","..(round(s[2]*100)/100)..","..(round(s[3]*100)/100)..","..(round(s[4]*100)/100)..")"
         end,
@@ -98,6 +109,9 @@ function Color:new(r,g,b,a)
 
         -- Substraction : 
         __sub=function(a,b)
+            if type(a) == "number" and type(b) == "table" then
+                a,b=b,a
+            end
             if type(a) == "table" and type(b) == "number" then
                 return Color:new(a[1]-b,a[2]-b,a[3]-b,a[4])
             end
@@ -107,6 +121,9 @@ function Color:new(r,g,b,a)
         end,
         -- Addition : 
         __add=function(a,b)
+            if type(a) == "number" and type(b) == "table" then
+                a,b=b,a
+            end
             if type(a) == "table" and type(b) == "number" then
                 return Color:new(a[1]+b,a[2]+b,a[3]+b,a[4])
             end
@@ -147,16 +164,16 @@ function Color:distance(color)
     return (s1-c1)*(s1-c1)+(s2-c2)*(s2-c2)+(s3-c3)*(s3-c3)
 end
 
--- interpolation util (apparently reversed from convention)
+-- interpolation util
 local function interp(a,b,k)
-    return a*k+b*(1-k)
+    return a*(1-k)+b*k
 end
 --[[
 	Mix two colors (self and given Color) with a single coefficient.
-    k represents "how much" of self to use.
-    Useful to find how a combination will appear on average (when viewed from afar)
+    (1-k) represents "how much" of self to use.
 
 	mix(
+        self: Color,
 		color: Color,
         k: number,    // coeficient for the mix
 	) -> Color
@@ -166,14 +183,13 @@ function Color:mix(color,k)
 end
 
 --[[
-	Find closest color in palette to self.
-    Uses given distanceFunction to rank palette colors.
-    RETURNS INDEX IN PALETTE.
+	Finds the closest color in palette to self and returns its index.
 
 	findClosest(
+        self: Color
 		palette: [Color],           
-        distanceFunction: function, // the function to use to rank palette colors
-        palettesize: number,        // can be given palettesize to reduce calls of #palette
+        distanceFunction: ?function | Color.distance, // the function used to rank palette colors
+        palettesize: ?number | #palette,              // can be given palettesize to reduce calls to #palette
 	) -> number
 ]]
 function Color:findClosest(palette,distanceFunction,palettesize)
@@ -192,12 +208,14 @@ function Color:findClosest(palette,distanceFunction,palettesize)
 end
 
 --[[
-	Converts Color to Oklab color space.
+	Converts a Color to Oklab color space.
     Theoretically closer to actual human sight.
     But it is pretty slow to calculate and gives barely noticeable changes, 
     especially amongst the bigger constraints of CC displays.
 
-	toOklab() -> Color
+	toOklab(
+        self: Color
+    ) -> Color
 ]]
 function Color:toOklab()
     local r, g, b = self[1],self[2],self[3]
@@ -231,6 +249,7 @@ end
     especially amongst the bigger constraints of CC displays.
 
 	distanceOklab(
+        self: Color
 		color: Color,   // the other color         
     ) -> number
 ]]
@@ -240,9 +259,8 @@ end
 
 --[[
 	New Color from hex.
-    Supports formats with or without leading #
-    ("#FFFFFF" or "FFFFFF")
-    Doesn't handle alpha.
+    Supports formats with or without leading #   
+    ("#RRGGBBAA" or "RRGGBBAA" or "#RRGGBB" or "RRGGBB") 
 
 	fromHex(
 		hex: String,
@@ -252,7 +270,7 @@ function Color.fromHex(hex)
     hex = string.lower(hex)
     local j = hex:sub(1,1) == "#" and 1 or 0
     local rgb = {}
-    for i=0,2 do
+    for i=0,math.floor((#hex-j)/2)-1 do
         local n = hexTableI[hex:sub(j+2*i+1,j+2*i+1)]+hexTableI[hex:sub(j+2*i+2,j+2*i+2)]*16
         rgb[i+1] = n/255
     end
@@ -264,7 +282,9 @@ end
     Doesn't handle alpha.
     Format without leading # ("ffffff")
 
-	toHex() -> String
+	toHex(
+        self: Color
+    ) -> String
 ]]
 function Color:toHex()
     local rgb = {round(self[1]*255),round(self[2]*255),round(self[3]*255)}
@@ -278,7 +298,9 @@ end
 	Duplicates Color.
     Allows reuse without sharing references.
 
-	duplicate() -> Color
+	duplicate(
+        self: Color
+    ) -> Color
 ]]
 function Color:duplicate()
     return Color:new(table.unpack(self))
@@ -288,7 +310,9 @@ end
     Linearize Color.
     Allows for "more accurate" math with colors.
 
-	linearize() -> Color
+	linearize(
+        self: Color
+    ) -> Color
 ]]
 function Color:linearize()
     local col = Color()
@@ -302,7 +326,9 @@ end
 	Faster Color:linearize().
     Not theoretically perfect linearization but good enough for most purposes.
 
-	gamma2() -> Color
+	gamma2(
+        self: Color
+    ) -> Color
 ]]
 function Color:gamma2()
     return Color(self[1]^2.2,self[2]^2.2,self[3]^2.2)
@@ -315,6 +341,7 @@ end
     Doesn't take alpha into account.
 
 	toHash(
+        self: Color
         size: number // To how many discrete values each component (r,g,b) of the Color is rounded to 
     ) -> number
 ]]
