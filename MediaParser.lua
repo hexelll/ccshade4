@@ -21,13 +21,29 @@
 local qoi = require "qoi"
 local ImageHandler = require "ImageHandler"
 local Color = require "Color"
+local png = require "png"
 
 local MediaParser = {
     -- all supported image type/format and their corresponding decoder/encoder
     parsers = {
         qoi={
-            decode=qoi.decode,
-            encode=function()end
+            decode=function(path)
+                local fp = fs.open(shell.resolve(path),"r")
+                return qoi.decode(fp.readAll())
+            end
+        },
+        png={
+            decode=function(path)
+                local image = png(shell.dir().."/"..path)
+                local pixels = {}
+                for i=1,image.height do
+                    for j=1,image.width do
+                        local px = image.pixels[i][j]
+                        pixels[(i-1)*image.width+j] = Color(px.R,px.G,px.B,px.A)
+                    end
+                end
+                return pixels,{width=image.width,height=image.height}
+            end
         }
     }
 }
@@ -52,10 +68,10 @@ end
         type:     String,     // type (format) of the data 
 	) -> ImageHandler
 ]]
-function MediaParser:parse(data,type)
+function MediaParser:parse(path,type)
     local pixels,desc = {},{}
     if self.parsers[type] then
-        pixels,desc = self.parsers[type].decode(data)
+        pixels,desc = self.parsers[type].decode(path)
     end
     local imageData = {}
     local timeYield = os.clock()
@@ -81,12 +97,10 @@ end
 	) -> ImageHandler
 ]]
 function MediaParser:open(path)
-    local fp = fs.open(shell.resolve(path),"r")
-    local data = fp.readAll()
-    return self:parse(data,findExtension(path))
+    return self:parse(path,findExtension(path))
 end
 
-
+--[[
 function MediaParser:convert(image)
 
 end
@@ -95,5 +109,6 @@ end
 function MediaParser:write(data,path)
 
 end
+]]
 
 return MediaParser
