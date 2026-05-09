@@ -1,8 +1,29 @@
+--[[
+
+    Used to open and parse image files formats into ImageHandlers
+    Supported formats :
+        qoi
+
+    MediaParser: {
+        parsers: [ <format name>={
+                        decode: function,
+                        encode: function
+                        }
+                    ]          //
+        parse:      function,
+        open:       function,
+        convert:    function,
+        write:      function
+    }
+
+]]
+
 local qoi = require "qoi"
 local ImageHandler = require "ImageHandler"
 local Color = require "Color"
 
 local MediaParser = {
+    -- all supported image type/format and their corresponding decoder/encoder
     parsers = {
         qoi={
             decode=qoi.decode,
@@ -11,6 +32,7 @@ local MediaParser = {
     }
 }
 
+-- internal util
 local function findExtension(path)
     local i = path:find("%.")
     while i do
@@ -20,6 +42,16 @@ local function findExtension(path)
     return path
 end
 
+--[[
+	Creates a new ImageHandler from the image data given,
+    using the type/format given.
+
+	parse(
+        self:     MediaParser,
+		data:     number,     // raw image data
+        type:     String,     // type (format) of the data 
+	) -> ImageHandler
+]]
 function MediaParser:parse(data,type)
     local pixels,desc = {},{}
     if self.parsers[type] then
@@ -38,17 +70,29 @@ function MediaParser:parse(data,type)
     return ImageHandler:new(desc.width,desc.height,imageData)
 end
 
+--[[
+    Opens the chosen file then
+	creates a new ImageHandler from the image data given,
+    using the type/format of the file.
+
+	open(
+        self:     MediaParser,
+		path:     String,     // path of the file to open
+	) -> ImageHandler
+]]
 function MediaParser:open(path)
     local fp = fs.open(shell.resolve(path),"r")
     local data = fp.readAll()
     return self:parse(data,findExtension(path))
 end
 
-function MediaParser.convert(image)
+
+function MediaParser:convert(image)
 
 end
 
-function MediaParser.write(data,path)
+
+function MediaParser:write(data,path)
 
 end
 
