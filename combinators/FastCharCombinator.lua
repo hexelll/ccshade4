@@ -203,7 +203,7 @@ function combinator:findCombination(u,v,image,palette)
     local d1 = palette[firstclosest]:distance(col)
     local d2 = palette[secondclosest]:distance(col)
 
-    local c = d1/(d1+d2)
+    local c = d1/(d1+d2+0.0001)
     local char1 = findClosestChar(self,c)
     local char2 = findClosestChar(self,1-c)
     local reverse = math.abs(c-char1.coef) > math.abs(1-c-char2.coef)
