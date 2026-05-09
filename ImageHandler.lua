@@ -159,18 +159,20 @@ function ImageHandler:resizeMean(newSx,newSy)
             for di=0,dx do
                 for dj=0,dy do
                     local u,v = (i+di)/(self.sx-1),(j+dj)/(self.sy-1)
-                    local px = self:getPx(u,v)
-                    if px then
-                        cs[1] = cs[1] + px[1]
-                        cs[2] = cs[2] + px[2]
-                        cs[3] = cs[3] + px[3]
-                        k=k+1
+                    if u <= 1 and v <= 1 then
+                        local px = self:getPx(u,v)
+                        if px then
+                            cs[1] = cs[1] + px[1]
+                            cs[2] = cs[2] + px[2]
+                            cs[3] = cs[3] + px[3]
+                            k=k+1
+                        end
                     end
                 end
             end
-            cs[1] = cs[1]/k
-            cs[2] = cs[2]/k
-            cs[3] = cs[3]/k
+            cs[1] = k > 0 and cs[1]/k or 0
+            cs[2] = k > 0 and cs[2]/k or 0
+            cs[3] = k > 0 and cs[3]/k or 0
             local u,v = (i)/(self.sx-1),(j)/(self.sy-1)
             newData[uvToIndex(newSx,newSy,u,v)] = cs
         end
