@@ -21,11 +21,6 @@ local files = {
     "combox"
 }
 
-if arg[1] == "-h" then
-    print("this program installs all files for ComBox \n usage: installer <path> -t\n -t => optional, installs tests folder")
-    return
-end
-
 local function githubUrl(username,repo,path)
     return "https://api.github.com/repos/"..username.."/"..repo.."/contents/"..path
 end
@@ -46,7 +41,7 @@ local function ptabs(n)
     return str
 end
 
-local function downloadRepo(path,url)
+local function downloadRepo(path,url,doTests)
     local response = textutils.unserializeJSON(getUnwrappedResponse(url))
 
     for _,p in pairs(response) do
@@ -63,7 +58,7 @@ local function downloadRepo(path,url)
                     end
                 end
             end
-        elseif arg[2] == "-t" and p.name == "tests" then
+        elseif doTests and p.name == "tests" then
             rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
             for _,pt in pairs(rep) do
                 term.write(ptabs(1))
@@ -86,4 +81,18 @@ local function downloadRepo(path,url)
     end  
 end
 
-downloadRepo(arg[1],githubUrl("hexelll","ComBox",""))
+if arg[1] == "-h" then
+    print("this program installs all files for ComBox \n usage: installer <path> -t\n -t => optional, installs tests folder")
+    return
+end
+local path = arg[1] == "-t" and "./" or arg[1]
+local doTests = arg[1] == "-t" or arg[2] == "-t"
+if not arg[1] and not arg[2] then
+    print("install path:")
+    path = read()
+    print("install tests?: [y/N]")
+    local ans = read()
+    doTests = ans == 'y' or ans == 'Y'
+end
+
+downloadRepo(path,githubUrl("hexelll","ComBox",""),doTests)
