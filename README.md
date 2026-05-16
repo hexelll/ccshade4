@@ -34,11 +34,6 @@ Modularity in the form of :
 These points are sometimes prioritised over maximal optimisation, leading to some processes being slower than other solutions.  
 Though you can achieve quite good speeds by avoiding or restricting some quality-focused features. 
 
-
-## Setup & use
-
-
-
 ## Definitions
 
 **Color**
@@ -76,6 +71,98 @@ Though you can achieve quite good speeds by avoiding or restricting some quality
 > A render is rough when there is a big difference in color in it's texels.  
 > A render is smooth when there is very little difference in color in it's texels.
 
+## Setup & use
+
+There are multiple ways to install **ComBox** :
+- Using the *installer script* :  
+    **Setup**
+    > Install the installer script with this command: ```wget https://pastebin/com/raw/GpTaLzMu installer.lua```  
+    > or just download *installer.lua* from github and drag and drop it into your computer  
+    > then simply run *installer.lua*.
+
+    **Use**  
+    > Put ```local combox = require "combox"``` in your file and it will return a table containing :  
+    > - Renderer
+    > - ImageHandler
+    > - Color
+    > - MediaParser  
+
+    >to import a combinator and use it you juste have to require it from the combinators folder,  
+    >**ex:** ```local FastCharCombinator = require "combinators.FastCharCombinator":new()```
+- Using **comboxVirtual** :  
+    > **comboxVirtual** is a way to use ComBox without having to install all the files onto your computer.  
+
+    **Setup**  
+    > Simply install *comboxVirtual.lua* from github and drag and drop it inside your computer  
+
+    **Use**  
+    > You just have to put
+    ```lua
+    local combox = require "comboxVirtual"
+    ```
+    > in your file and it will return a table containing :  
+    > - Renderer
+    > - ImageHandler
+    > - Color
+    > - MediaParser    
+    > - combinators
+    >   - FastCharCombinator
+    >   - SquarePixelCombinator
+    >   - MathCharCombinator
+    >   - ***...***
+
+    > **/!\DISCLAIMER/!\\**   
+    > This comes with a pretty long loading time so it might not always be the best option for your project.  
+
+**General Use**
+
+To use ComBox in our program we first need to create a **Renderer** instance.  
+A Renderer instance needs a few things, mainly where to display and how to display it, 
+we tell it where to display with the *term* parameter,  
+> By default this will simply be term (the terminal) but it can also be a monitor peripheral.  
+
+we can also define the origin, width and height of our display.  
+This is done with px and py for the origin and sx and sy for width and height.  
+> These parameters are optional and will default to fill the whole screen.  
+
+We now need to tell it how to display things, this is done with the *mask* and *combinators* parameters.  
+The mask is an ImageHandler of Combinators that defines what combinator gets used where.  
+> By default *mask* is an ImageHandler filled with the first combinator in the combinators list.  
+
+Combinators are all initialized with a "new" function, it takes itself as a first parameter  
+and a table of parameters as the second parameter.  
+> combinator:new() = combinator.new(combinator)  
+> you should go look into each combinator's file for more information on what parameters exist for it. 
+
+Once we have our Renderer instance we need to create an ImageHandler instance.  
+> You can create an ImageHandler from media with the MediaParser class.  
+
+To create an ImageHandler instance we can use the ImageHandler:new function. 
+It takes a width and a height as parameters.
+> By default pixels of the image will be set to black or Color(0,0,0,1).  
+
+Once we have our image we can render and display it.
+> The size of the image doesn't have to match the renderer.  
+
+Here is a small exemple script that displays uvs :  
+```lua
+    local combox = require "comboxVirtual" -- this would also work without using comboxVirtual
+    local FastCharCombinator = combox.combinators.FastCharCombinator:new() -- we create a new FastCharCombinator instance, we don't give it a parameters table so it will use the default
+    local screen = combox.Renderer:new{
+        combinators = {FastCharCombinator} -- we define what combinator we want to use
+    }
+
+    local image = ImageHandler:new(screen.sx,screen.sy) -- we create an image with the same size as our screen
+    image:process(function(self,u,v) -- we apply a shader to our image, see ImageHandler.lua for more info
+        return combox.Color(u,v) -- equivalent to Color:new(u,v,0,1)
+    end) 
+
+    screen:render(image) -- we calculate all the combination to display on our screen
+    .display() -- we display the combinations from render
+```
+
+**Result :**
+![screenshot1.png](images/screenshot1.png)
 
 ## Architecture
 The actual rendering is done by "combinators" objects.  
@@ -104,7 +191,7 @@ These tell the system what combination to put at each point or the render.
 
 ## Credits & stuff
 
-Project made by hexell and TO (to_noaccentavailable on Discord).
+Project made by [hexell](https://github.com/hexelll/) (hexell_dev on Discord) and [TO](https://github.com/TheoALBERT) (to_noaccentavailable on Discord).
 
 If you have questions, ideas, critisism, or need any help, come talk about it in the [Minecraft computer mods Discord](https://discord.gg/minecraft-computer-mods-477910221872824320).
 
