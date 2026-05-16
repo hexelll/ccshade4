@@ -150,8 +150,12 @@ end
 ]]
 function ImageHandler:resizeMean(newSx,newSy)
     local newData = {}
+    if newSx > self.sx or newSy > self.sy then
+        return self:resize(newSx,newSy)
+    end
     local dx = round(self.sx/newSx)
     local dy = round(self.sy/newSy)
+    
     for i=0,self.sx-1 do
         for j=0,self.sy-1 do
             local cs = Color()

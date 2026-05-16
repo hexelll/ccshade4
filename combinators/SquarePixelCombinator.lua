@@ -54,7 +54,7 @@ end
 ]]
 function combinator:new(args)
     args = args and args or {}
-    cacheSize = args.cacheSize and args.cacheSize or 16
+    local cacheSize = args.cacheSize and args.cacheSize or 16
     local o = {cacheSize=cacheSize,cache={}}
     setmetatable(o,{
         __index=function(_,k)
