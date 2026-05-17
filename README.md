@@ -75,17 +75,21 @@ Though you can achieve quite good speeds by avoiding or restricting some quality
 
 There are multiple ways to install **ComBox** :
 - Using the *installer script* :  
-    **Setup**
-    > Install the installer script with this command: ```wget https://pastebin/com/raw/GpTaLzMu installer.lua```  
-    > or just download *installer.lua* from github and drag and drop it into your computer  
-    > then simply run *installer.lua*.
+    **Setup**  
+        Install the installer script with this command: ```wget https://pastebin/com/raw/GpTaLzMu installer.lua```  
+        or just download *installer.lua* from github and drag and drop it into your computer  
+        then simply run *installer.lua*.
 
     **Use**  
-    > Put ```local combox = require "combox"``` in your file and it will return a table containing :  
-    > - Renderer
-    > - ImageHandler
-    > - Color
-    > - MediaParser  
+    You just have to put 
+    ```lua
+    local combox = require "combox"
+    ``` 
+    in your file and it will return a table containing :
+    - Renderer
+    - ImageHandler
+    - Color
+    - MediaParser  
 
     >to import a combinator and use it you juste have to require it from the combinators folder,  
     >**ex:** ```local FastCharCombinator = require "combinators.FastCharCombinator":new()```
@@ -93,23 +97,23 @@ There are multiple ways to install **ComBox** :
     > **comboxVirtual** is a way to use ComBox without having to install all the files onto your computer.  
 
     **Setup**  
-    > Simply install *comboxVirtual.lua* from github and drag and drop it inside your computer  
+    Simply install *comboxVirtual.lua* from github and drag and drop it inside your computer  
 
     **Use**  
-    > You just have to put
+    You just have to put
     ```lua
     local combox = require "comboxVirtual"
     ```
-    > in your file and it will return a table containing :  
-    > - Renderer
-    > - ImageHandler
-    > - Color
-    > - MediaParser    
-    > - combinators
-    >   - FastCharCombinator
-    >   - SquarePixelCombinator
-    >   - MathCharCombinator
-    >   - ***...***
+    in your file and it will return a table containing :  
+    - Renderer
+    - ImageHandler
+    - Color
+    - MediaParser    
+    - combinators
+      - FastCharCombinator
+      - SquarePixelCombinator
+      - MathCharCombinator
+      - ***...***
 
     > **/!\DISCLAIMER/!\\**   
     > This comes with a pretty long loading time so it might not always be the best option for your project.  
