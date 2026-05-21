@@ -49,6 +49,14 @@ local function downloadRepo(path,url,doTests)
                     end
                 end
             end
+        elseif p.name == "outsideLibs" then
+            local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
+            for _,pt in pairs(rep) do
+                print(pt.path)
+                local h = fs.open(path..pt.path,"w")
+                h.write(getUnwrappedResponse(pt.download_url))
+                h.close()
+            end
         elseif doTests and p.name == "tests" then
             local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
             for _,pt in pairs(rep) do
@@ -78,9 +86,13 @@ end
 local path = arg[1] == "-t" and "./" or arg[1]
 local doTests = arg[1] == "-t" or arg[2] == "-t"
 if not arg[1] and not arg[2] then
-    print("install path: [\"/combox\" by default]")
+    print("install path: [\"/combox/\" by default]")
     path = read()
-    path = #path == 0 and "/combox" or path
+    path = #path == 0 and "/combox/" or path
+    path = path:sub(#path,#path) == '/' and path or path..'/'
+    local fp = fs.open("/.combox_secrets","w")
+    fp.write(path)
+    fp.close()
     print("install tests?: [y/N]")
     local ans = read()
     doTests = ans == 'y' or ans == 'Y'

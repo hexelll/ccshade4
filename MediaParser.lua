@@ -17,7 +17,11 @@
     }
 
 ]]
+local fp = fs.open("/.combox_secrets","r")
+local path = fp.readAll()
+fp.close()
 
+package.path = package.path .. ";"..path.."?.lua" -- this is used so we can require from another directory
 local ImageHandler = require "ImageHandler"
 local Color = require "Color"
 local png = require "outsideLibs.png"
