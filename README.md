@@ -72,8 +72,6 @@ Though you can achieve quite good speeds by avoiding or restricting some quality
 > A render is smooth when there is very little difference in color in it's texels.
 
 ## Setup & use
-
-There are multiple ways to install **ComBox** :
 - Using the *installer script* :  
     **Setup**  
         Install the installer script with this command: ```wget https://pastebin.com/raw/GpTaLzMu installer.lua```  
@@ -81,42 +79,18 @@ There are multiple ways to install **ComBox** :
         then simply run *installer.lua*.
 
     **Use**  
-    You just have to put 
+    You just have to put your path to your combox installation (/combox/ by default) followed by the module you want to require
     ```lua
-    local combox = require "combox"
+    local Renderer = require "combox.Renderer"
     ``` 
-    in your file and it will return a table containing :
-    - Renderer
-    - ImageHandler
-    - Color
-    - MediaParser  
+    There are 4 modules you can require :
+    - Renderer: used to render images and siplay them to a monitor or terminal
+    - ImageHandler: used to create store images
+    - Color: used to store colors
+    - MediaParser: used to read media, currently only png and qoi images are supported  
 
     >to import a combinator and use it you juste have to require it from the combinators folder,  
-    >**ex:** ```local FastCharCombinator = require "combinators.FastCharCombinator":new()```
-- Using **comboxVirtual** :  
-    > **comboxVirtual** is a way to use ComBox without having to install all the files onto your computer.  
-
-    **Setup**  
-    Simply install *comboxVirtual.lua* from github and drag and drop it inside your computer  
-
-    **Use**  
-    You just have to put
-    ```lua
-    local combox = require "comboxVirtual"
-    ```
-    in your file and it will return a table containing :  
-    - Renderer
-    - ImageHandler
-    - Color
-    - MediaParser    
-    - combinators
-      - FastCharCombinator
-      - SquarePixelCombinator
-      - MathCharCombinator
-      - ***...***
-
-    > **/!\DISCLAIMER/!\\**   
-    > This comes with a pretty long loading time so it might not always be the best option for your project.  
+    >**ex:** local FastCharCombinator = require "combox.combinators.FastCharCombinator":new()  
 
 **General Use**
 
@@ -150,12 +124,12 @@ Once we have our image we can render and display it.
 
 Here is a small exemple script that displays uvs :  
 ```lua
-    local combox = require "comboxVirtual" -- this would also work without using comboxVirtual
-    local FastCharCombinator = combox.combinators.FastCharCombinator:new() -- we create a new FastCharCombinator instance, we don't give it a parameters table so it will use the default
-    local screen = combox.Renderer:new{
+    local FastCharCombinator = require("combox.combinators.FastCharCombinator"):new() -- we create a new FastCharCombinator instance, we don't give it a parameters table so it will use the default
+    local Renderer = require "combox.Renderer"
+    local screen = Renderer:new{ -- we create the object that will allow us to display images to a screen
         combinators = {FastCharCombinator} -- we define what combinator we want to use
     }
-
+    local ImageHandler = require "combox.ImageHandler"
     local image = ImageHandler:new(screen.sx,screen.sy) -- we create an image with the same size as our screen
     image:process(function(self,u,v) -- we apply a shader to our image, see ImageHandler.lua for more info
         return combox.Color(u,v) -- equivalent to Color:new(u,v,0,1)
@@ -176,7 +150,7 @@ These tell the system what combination to put at each point or the render.
 ## Core classes
 
 ### Color
-# Usage
+Usage  
 ```lua
 local Color = require "Color" -- you can also use combox.Color if you require combox
 --                r   g   b   a
