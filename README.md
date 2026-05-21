@@ -74,7 +74,7 @@ Though you can achieve quite good speeds by avoiding or restricting some quality
 ## Setup & use
 - Using the *installer script* :  
     **Setup**  
-        Install the installer script with this command: ```wget https://pastebin.com/raw/GpTaLzMu installer.lua```  
+        Install the installer script with this command: ```wget https://pastebin.com/raw/MAC87pxn installer.lua```  
         or just download *installer.lua* from github and drag and drop it into your computer  
         then simply run *installer.lua*.
 
