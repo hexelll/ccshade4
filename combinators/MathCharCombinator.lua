@@ -31,7 +31,7 @@ local charCoefs = {0 ,19/54 ,25/54 ,21/54 ,13/54 ,19/54 ,18/54 ,12/54 ,36/54 ,0 
     Vector Math Utils
 ]]
 local function round(x)
-    return math.floor(x+0.5)
+    return math.floor(x+0.4999)
 end
 
 local function clamp(x)
