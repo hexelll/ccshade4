@@ -1,7 +1,8 @@
 package.path = package.path .. ";../?.lua" -- this is used so we can require from a parent directory
 
-local combox = require "combox"
-local Color = combox.Color
+local Color = require "Color"
+local Renderer = require "Renderer"
+local ImageHandler = require "ImageHandler"
 
 if not arg[1] then
     error("the first argument should be the name of a combinator, ex: FastCharCombinator")
@@ -14,12 +15,12 @@ if mon then
     mon.setTextScale(0.5)
 end
 
-local screen = combox.Renderer:new{
+local screen = Renderer:new{
     term=mon,
     combinators = { combinator }
 }
 
-local image = combox.ImageHandler:new(
+local image = ImageHandler:new(
     screen.sx,
     screen.sy
 ):process(function(self,u,v)

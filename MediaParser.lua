@@ -17,11 +17,15 @@
     }
 
 ]]
+local fp = fs.open("/.combox_secrets","r")
+local path = fp.readAll()
+fp.close()
 
-local qoi = require "qoi"
+package.path = package.path .. ";"..path.."?.lua" -- this is used so we can require from another directory
 local ImageHandler = require "ImageHandler"
 local Color = require "Color"
-local png = require "png"
+local png = require "outsideLibs.png"
+local qoi = require "outsideLibs.qoi"
 
 local MediaParser = {
     -- all supported image type/format and their corresponding decoder/encoder

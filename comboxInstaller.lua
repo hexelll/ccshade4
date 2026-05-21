@@ -21,11 +21,6 @@ local files = {
     "combox"
 }
 
-if arg[1] == "-h" then
-    print("this program installs all files for ComBox \n usage: installer <path> -t\n -t => optional, installs tests folder")
-    return
-end
-
 local function githubUrl(username,repo,path)
     return "https://api.github.com/repos/"..username.."/"..repo.."/contents/"..path
 end
@@ -38,24 +33,15 @@ local function getUnwrappedResponse(url)
     return response[1].readAll()
 end
 
-local function ptabs(n)
-    local str = ""
-    for i=1,n do
-        str = str.."  "
-    end
-    return str
-end
-
-local function downloadRepo(path,url)
+local function downloadRepo(path,url,doTests)
     local response = textutils.unserializeJSON(getUnwrappedResponse(url))
 
     for _,p in pairs(response) do
         if p.name == "combinators" then
-            rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
+            local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
             for i,pt in pairs(rep) do
                 for _,pc in pairs(combinators) do
                     if pc..".lua" == pt.name then
-                        term.write(ptabs(1))
                         print(pt.path)
                         local h = fs.open(path..pt.path,"w")
                         h.write(getUnwrappedResponse(pt.download_url))
@@ -63,10 +49,17 @@ local function downloadRepo(path,url)
                     end
                 end
             end
-        elseif arg[2] == "-t" and p.name == "tests" then
-            rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
+        elseif p.name == "outsideLibs" then
+            local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
             for _,pt in pairs(rep) do
-                term.write(ptabs(1))
+                print(pt.path)
+                local h = fs.open(path..pt.path,"w")
+                h.write(getUnwrappedResponse(pt.download_url))
+                h.close()
+            end
+        elseif doTests and p.name == "tests" then
+            local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
+            for _,pt in pairs(rep) do
                 print(pt.path)
                 local h = fs.open(path..pt.path,"w")
                 h.write(getUnwrappedResponse(pt.download_url))
@@ -86,4 +79,23 @@ local function downloadRepo(path,url)
     end  
 end
 
-downloadRepo(arg[1],githubUrl("hexelll","ComBox",""))
+if arg[1] == "-h" then
+    print("this program installs all files for ComBox \n usage: installer <path> -t\n -t => optional, installs tests folder")
+    return
+end
+local path = arg[1] == "-t" and "./" or arg[1]
+local doTests = arg[1] == "-t" or arg[2] == "-t"
+if not arg[1] and not arg[2] then
+    print("install path: [\"/combox/\" by default]")
+    path = read()
+    path = #path == 0 and "/combox/" or path
+    path = path:sub(#path,#path) == '/' and path or path..'/'
+    local fp = fs.open("/.combox_secrets","w")
+    fp.write(path)
+    fp.close()
+    print("install tests?: [y/N]")
+    local ans = read()
+    doTests = ans == 'y' or ans == 'Y'
+end
+
+downloadRepo(path,githubUrl("hexelll","ComBox",""),doTests)

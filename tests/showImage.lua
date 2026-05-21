@@ -1,6 +1,7 @@
 package.path = package.path .. ";../?.lua" -- this is used so we can require from a parent directory
 
-local combox = require "combox"
+local Renderer = require "Renderer"
+local MediaParser = require "MediaParser"
 
 local FastCharCombinator = require ("combinators.FastCharCombinator"):new()
 
@@ -11,12 +12,12 @@ if mon then
     mon.setTextScale(0.5)
 end
 
-local screen = combox.Renderer:new{
+local screen = Renderer:new{
     term=mon,
     combinators={ FastCharCombinator }
 }
 
-local image = combox.MediaParser:open(imagePath)
+local image = MediaParser:open(imagePath)
 if arg[2] == "nearest" then -- faster but pretty ugly
     image:resize(screen.sx,screen.sy)
 elseif arg[2] == "mean" then -- slower but much nicer

@@ -13,14 +13,18 @@
     }
 
 ]]
+local fp = fs.open("/.combox_secrets","r")
+local path = fp.readAll()
+fp.close()
 
+package.path = package.path .. ";"..path.."?.lua" -- this is used so we can require from another directory
 local Color = require("Color")
 
 local ImageHandler = {}
 
 
 local function round(x)
-    return math.floor(x+0.5)
+    return math.floor(x+0.4999)
 end
 
 local function clamp(x)

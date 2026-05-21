@@ -24,7 +24,7 @@ local hexTable = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f
 
 
 local function round(x)
-    return math.floor(x+0.5)
+    return math.floor(x+0.4999)
 end
 
 -- cache management util

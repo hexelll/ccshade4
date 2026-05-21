@@ -65,7 +65,7 @@ local hexTableI = {
 }
 
 local function round(x)
-    return math.floor(x+0.5)
+    return math.floor(x+0.4999)
 end
 
 local function clamp(x)

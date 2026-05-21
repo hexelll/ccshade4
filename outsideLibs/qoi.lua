@@ -1,4 +1,4 @@
-local M = require("numberlua")
+local M = require("outsideLibs.numberlua")
 local bit = M.bit
 
 local qoi = {

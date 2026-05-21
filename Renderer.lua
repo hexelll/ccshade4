@@ -1,7 +1,14 @@
 
-local Renderer = {}
+local fp = fs.open("/.combox_secrets","r")
+local path = fp.readAll()
+fp.close()
+
+package.path = package.path .. ";"..path.."?.lua" -- this is used so we can require from another directory
+
 local Color = require "Color"
 local ImageHandler = require "ImageHandler"
+
+local Renderer = {}
 
 --[[
 
@@ -124,14 +131,14 @@ function Renderer:render(image,palette)
         t = os.clock()
         print("start render")
     end
-    palette = self.lastPalette
-    if image.modified then
+    if not palette and image.modified then
         palette = image:findPalette()
         image.modified = false
         for _,combinator in pairs(self.combinators) do
             combinator:onImageChange(image,palette,self)
         end
     end
+    palette = palette and palette or self.lastPalette
     local equal = true
     if self.lastPalette then
         for i=1,#palette do
