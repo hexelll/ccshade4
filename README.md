@@ -11,7 +11,7 @@ All about render quality and customizability.
 - Setup & use
 - Definitions
 - Architecture
-- Util classes
+- Core classes
 - Combinators
 - Credits & stuff
 
@@ -173,9 +173,18 @@ The actual rendering is done by "combinators" objects.
 These tell the system what combination to put at each point or the render.
 
 
-## Util classes
+## Core classes
 
 ### Color
+# Usage
+```lua
+local Color = require "Color" -- you can also use combox.Color if you require combox
+--                r   g   b   a
+local rgb = Color(0.1,0.4,0.8,1) -- same as Color:new(0.1,0.4,0.8,1)
+local rgbShort = Color(0.5,1) -- same as Color(0.5,1,0,1)
+local hex = Color("#FF0000") -- same as Color(1,0,0,1)
+local hexAlpha = Color("#00FF0000") -- same as Color(0,1,0,0)
+```
 ### ImageHandler
 ### MediaParser
 ### Renderer
