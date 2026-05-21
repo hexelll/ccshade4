@@ -74,9 +74,9 @@ Though you can achieve quite good speeds by avoiding or restricting some quality
 ## Setup & use
 - Using the *installer script* :  
     **Setup**  
-        Install the installer script with this command: ```wget https://pastebin.com/raw/MAC87pxn installer.lua```  
-        or just download *installer.lua* from github and drag and drop it into your computer  
-        then simply run *installer.lua*.
+        Install the combox installer script with this command: ```wget https://pastebin.com/raw/MAC87pxn comboxInstaller.lua```  
+        or just download *comboxInstaller.lua* from github and drag and drop it into your computer  
+        then simply run *comboxInstaller.lua*.
 
     **Use**  
     You just have to put your path to your combox installation (/combox/ by default) followed by the module you want to require
