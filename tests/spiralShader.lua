@@ -1,18 +1,17 @@
 package.path = package.path .. ";../?.lua" -- this is used so we can require from a parent directory
 
-local combox = require "combox"
+local Color = require "Color"
+local ImageHandler = require "ImageHandler"
+local Renderer = require "Renderer"
 
-local Color = combox.Color
-local ImageHandler = combox.ImageHandler
-
-local FastCharCombinator = require ("combinators.FastCharCombinator"):new()
+local FastCharCombinator = require("combinators.FastCharCombinator"):new()
 
 local mon = peripheral.find("monitor")
 if mon then
     mon.setTextScale(0.5)
 end
 
-local screen = combox.Renderer:new{
+local screen = Renderer:new{
     term = mon,
     combinators= {FastCharCombinator}
 }

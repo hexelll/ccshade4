@@ -19,7 +19,7 @@
 -- IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 -- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-local deflate = require("deflate")
+local deflate = require("outsideLibs.deflate")
 local requiredDeflateVersion = "0.3.20111128"
 
 if (deflate._VERSION ~= requiredDeflateVersion) then
@@ -273,9 +273,13 @@ local function pngImage(path, progCallback, verbose, memSave)
         end, 
         disable_crc = true
     }
+    local lastt = os.clock()
     StringStream = {
         str = table.concat(output),
         read = function(self, num)
+            if os.clock()-lastt > 5 then
+                sleep()
+            end
             local toreturn = self.str:sub(1, num)
             self.str = self.str:sub(num + 1, self.str:len())
             return toreturn

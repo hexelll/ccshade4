@@ -33,24 +33,15 @@ local function getUnwrappedResponse(url)
     return response[1].readAll()
 end
 
-local function ptabs(n)
-    local str = ""
-    for i=1,n do
-        str = str.."  "
-    end
-    return str
-end
-
 local function downloadRepo(path,url,doTests)
     local response = textutils.unserializeJSON(getUnwrappedResponse(url))
 
     for _,p in pairs(response) do
         if p.name == "combinators" then
-            rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
+            local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
             for i,pt in pairs(rep) do
                 for _,pc in pairs(combinators) do
                     if pc..".lua" == pt.name then
-                        term.write(ptabs(1))
                         print(pt.path)
                         local h = fs.open(path..pt.path,"w")
                         h.write(getUnwrappedResponse(pt.download_url))
@@ -59,9 +50,8 @@ local function downloadRepo(path,url,doTests)
                 end
             end
         elseif doTests and p.name == "tests" then
-            rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
+            local rep = textutils.unserialiseJSON(getUnwrappedResponse(p.url))
             for _,pt in pairs(rep) do
-                term.write(ptabs(1))
                 print(pt.path)
                 local h = fs.open(path..pt.path,"w")
                 h.write(getUnwrappedResponse(pt.download_url))
@@ -88,8 +78,9 @@ end
 local path = arg[1] == "-t" and "./" or arg[1]
 local doTests = arg[1] == "-t" or arg[2] == "-t"
 if not arg[1] and not arg[2] then
-    print("install path:")
+    print("install path: [\"/combox\" by default]")
     path = read()
+    path = #path == 0 and "/combox" or path
     print("install tests?: [y/N]")
     local ans = read()
     doTests = ans == 'y' or ans == 'Y'
